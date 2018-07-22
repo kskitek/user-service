@@ -6,7 +6,7 @@ VERSION = `git rev-parse --short HEAD`
 DOCKER_REG = registry.gitlab.com/kskitek/arecar
 DOCKER_IMAGE = $(DOCKER_REG)/$(SVC_NAME):$(VERSION)
 
-.PHONY: build docker
+.PHONY: build build-docker
 
 all: build test run
 
@@ -16,10 +16,10 @@ get-deps:
 test:
 	go test -race ./...
 
-build: test
+build:
 	go build
 
-run2:
+run2: build
 	./$(SVC_NAME)
 
 build-docker:
