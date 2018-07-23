@@ -16,11 +16,24 @@ type User struct {
 }
 
 type UseCases interface {
+	GetUser(int64) (*User, *http_boundary.ApiError)
 	AddUser(*User) (*User, *http_boundary.ApiError)
 }
 
 type ucs struct {
 	dao Dao
+}
+
+func (uc *ucs) GetUser(id int64) (*User, *http_boundary.ApiError) {
+	if id == 0 {
+		return nil, &http_boundary.ApiError{"Id required", http.StatusBadRequest}
+	}
+	user, err := uc.dao.GetUser(id)
+	if err != nil {
+		return nil, &http_boundary.ApiError{"Cannot read user: " + err.Error(), http.StatusInternalServerError}
+	}
+
+	return user, nil
 }
 
 func (uc *ucs) AddUser(user *User) (*User, *http_boundary.ApiError) {
@@ -29,7 +42,7 @@ func (uc *ucs) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	}
 	exists, err := uc.dao.UserExists(user)
 	if err != nil {
-		return nil, &http_boundary.ApiError{}
+		return nil, &http_boundary.ApiError{"Cannot save user: " + err.Error(), http.StatusInternalServerError}
 	}
 	if exists {
 		return nil, &http_boundary.ApiError{"User already exists.", http.StatusConflict}
@@ -47,6 +60,7 @@ func (uc *ucs) AddUser(user *User) (*User, *http_boundary.ApiError) {
 
 	return newUser, nil
 }
+
 func validateAddUserPayload(user *User) *http_boundary.ApiError {
 	if !validateEmail(user.Email) {
 		return &http_boundary.ApiError{Message: "Invalid email address", StatusCode: http.StatusUnprocessableEntity}

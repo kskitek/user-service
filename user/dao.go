@@ -6,7 +6,7 @@ import (
 )
 
 type Dao interface {
-	GetUser(int) (*User, error)
+	GetUser(int64) (*User, error)
 	UserExists(*User) (bool, error)
 	AddUser(*User) (*User, error)
 }
@@ -14,7 +14,7 @@ type Dao interface {
 type MongoDao struct {
 }
 
-func (d *MongoDao) GetUser(int) (*User, error) {
+func (d *MongoDao) GetUser(int64) (*User, error) {
 	return nil, nil
 }
 
@@ -32,8 +32,8 @@ type InMemDao struct {
 	currId     int64
 }
 
-func (d *InMemDao) GetUser(id int) (*User, error) {
-	idStr := strconv.Itoa(id)
+func (d *InMemDao) GetUser(id int64) (*User, error) {
+	idStr := strconv.FormatInt(id, 10)
 	user := d.mem[idStr]
 	return user, nil
 }
