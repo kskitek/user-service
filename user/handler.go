@@ -9,7 +9,7 @@ import (
 )
 
 type UserHandler struct {
-	uc UseCases
+	uc Crud
 }
 
 type UserResponse struct {
@@ -19,26 +19,11 @@ type UserResponse struct {
 
 func NewUserHandler() *UserHandler {
 	return &UserHandler{
-		uc: &ucs{dao: &InMemDao{
+		uc: &crud{dao: &InMemDao{
 			make(map[string]*User),
 			make(map[string]*User),
 			int64(0),
 		}},
-	}
-}
-
-func (u *UserHandler) Routes() []*http_boundary.Route {
-	return []*http_boundary.Route{
-		{
-			Methods: []string{"GET"},
-			Path:    "/user/{id}",
-			Handler: u.handleUserGet,
-		},
-		{
-			Methods: []string{"POST"},
-			Path:    "/user",
-			Handler: u.handleUserAdd,
-		},
 	}
 }
 

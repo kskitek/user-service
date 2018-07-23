@@ -15,16 +15,16 @@ type User struct {
 	RegistrationDate time.Time `json:"registrationDate,omitempty"`
 }
 
-type UseCases interface {
+type Crud interface {
 	GetUser(int64) (*User, *http_boundary.ApiError)
 	AddUser(*User) (*User, *http_boundary.ApiError)
 }
 
-type ucs struct {
+type crud struct {
 	dao Dao
 }
 
-func (uc *ucs) GetUser(id int64) (*User, *http_boundary.ApiError) {
+func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	if id == 0 {
 		return nil, &http_boundary.ApiError{"Id required", http.StatusBadRequest}
 	}
@@ -39,7 +39,7 @@ func (uc *ucs) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	return user, nil
 }
 
-func (uc *ucs) AddUser(user *User) (*User, *http_boundary.ApiError) {
+func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	if user == nil {
 		return nil, &http_boundary.ApiError{"User details required", http.StatusUnprocessableEntity}
 	}
