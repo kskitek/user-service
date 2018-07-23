@@ -32,6 +32,9 @@ func (uc *ucs) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	if err != nil {
 		return nil, &http_boundary.ApiError{"Cannot read user: " + err.Error(), http.StatusInternalServerError}
 	}
+	if user == nil {
+		return nil, &http_boundary.ApiError{"User not found", http.StatusNotFound}
+	}
 
 	return user, nil
 }

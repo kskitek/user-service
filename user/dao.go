@@ -3,6 +3,7 @@ package user
 import (
 	"strconv"
 	"sync/atomic"
+	"time"
 )
 
 type Dao interface {
@@ -46,6 +47,8 @@ func (d *InMemDao) UserExists(user *User) (bool, error) {
 func (d *InMemDao) AddUser(user *User) (*User, error) {
 	newId := atomic.AddInt64(&d.currId, 1)
 	user.Id = strconv.FormatInt(newId, 10)
+	user.RegistrationDate = time.Now().UTC()
+
 	d.mem[user.Id] = user
 	d.memByEmail[user.Email] = user
 	return user, nil
