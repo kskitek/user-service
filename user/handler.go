@@ -17,7 +17,11 @@ type UserResponse struct {
 
 func NewUserHandler() *UserHandler {
 	return &UserHandler{
-		uc: &ucs{dao: &MongoDao{}},
+		uc: &ucs{dao: &InMemDao{
+			make(map[string]*User),
+			make(map[string]*User),
+			0,
+		}},
 	}
 }
 
