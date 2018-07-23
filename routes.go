@@ -8,7 +8,7 @@ import (
 func getRoutes() []*http_boundary.Route {
 	var routes []*http_boundary.Route
 
-	routes = append(routes, user.Routes()...)
+	routes = append(routes, user.NewUserHandler().Routes()...)
 
 	return routes
 }
