@@ -19,18 +19,18 @@ test:
 build:
 	go build
 
-run2: build
+run: build
 	./$(SVC_NAME)
 
-build-docker:
+build-docker: test
 	env GOOS=linux go build -o $(SVC_NAME)_linux
 	docker build -t $(DOCKER_IMAGE) .
 
 run-docker: build-docker
-    docker run -it --rm $(DOCKER_IMAGE)
+	docker run -it --rm $(DOCKER_IMAGE)
 
 push: build-docker
 	docker push $(DOCKER_IMAGE)
 
 clean:
-	rm $(SVC_NAME) $(SVC_NAME)_linux
+	rm $(SVC_NAME); rm $(SVC_NAME)_linux
