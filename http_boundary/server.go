@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"encoding/json"
 	"fmt"
+	"time"
+	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -19,7 +21,15 @@ func NewServer(routes []*Route) *Server {
 
 func (s *Server) addRoutes(routes []*Route) {
 	for _, r := range routes {
-		s.Router.HandleFunc(r.Path, r.Handler).Methods(r.Methods...)
+		s.Router.HandleFunc(r.Path, handleAround(r.Handler)).Methods(r.Methods...)
+	}
+}
+
+func handleAround(h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		begin := time.Now()
+		h.ServeHTTP(w, r)
+		logrus.WithField("m", r.Method).WithField("p", r.URL.Path).WithField("t", time.Since(begin)).Info("Request")
 	}
 }
 
@@ -47,14 +57,15 @@ func Respond(responsePayload interface{}, selfHref string, okStatusCode int, w h
 		httpErr := &HttpError{Href: &Link{Href: selfHref}, ApiError: &ApiError{marshalErr.Error(), http.StatusInternalServerError}}
 		RespondWithError(httpErr, w)
 	} else {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(okStatusCode)
 		w.Write(bytes)
 	}
 }
 
 func RespondWithError(err *HttpError, w http.ResponseWriter) {
-	// TODO log errors
 	if err != nil {
+		logrus.WithError(err).WithField("p", err.Href.Href).Error("")
 		bytes, jsonErr := json.Marshal(err)
 		if jsonErr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
