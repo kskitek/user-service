@@ -14,5 +14,10 @@ func (u *UserHandler) Routes() []*http_boundary.Route {
 			Path:    "/user",
 			Handler: u.handleUserAdd,
 		},
+		{
+			Methods: []string{"DELETE"},
+			Path:    "/user/{id}",
+			Handler: u.handleUserDelete,
+		},
 	}
 }

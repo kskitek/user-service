@@ -18,6 +18,7 @@ type User struct {
 type Crud interface {
 	GetUser(int64) (*User, *http_boundary.ApiError)
 	AddUser(*User) (*User, *http_boundary.ApiError)
+	DeleteUser(int64) *http_boundary.ApiError
 }
 
 type crud struct {
@@ -62,6 +63,18 @@ func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	}
 
 	return newUser, nil
+}
+
+func (uc *crud) DeleteUser(id int64) *http_boundary.ApiError {
+	if id == 0 {
+		return &http_boundary.ApiError{"Id required", http.StatusBadRequest}
+	}
+	err := uc.dao.DeleteUser(id)
+	if err != nil {
+		return &http_boundary.ApiError{"Cannot delete user: " + err.Error(), http.StatusInternalServerError}
+	}
+
+	return nil
 }
 
 func validateAddUserPayload(user *User) *http_boundary.ApiError {

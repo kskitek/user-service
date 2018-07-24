@@ -10,6 +10,7 @@ type Dao interface {
 	GetUser(int64) (*User, error)
 	UserExists(*User) (bool, error)
 	AddUser(*User) (*User, error)
+	DeleteUser(int64) error
 }
 
 type MongoDao struct {
@@ -52,4 +53,14 @@ func (d *InMemDao) AddUser(user *User) (*User, error) {
 	d.mem[user.Id] = user
 	d.memByEmail[user.Email] = user
 	return user, nil
+}
+
+func (d *InMemDao) DeleteUser(id int64) error {
+	idStr := strconv.FormatInt(id, 10)
+	user, ok := d.mem[idStr]
+	if ok {
+		delete(d.mem, idStr)
+		delete(d.memByEmail, user.Email)
+	}
+	return nil
 }
