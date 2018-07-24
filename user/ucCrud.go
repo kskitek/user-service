@@ -27,14 +27,14 @@ type crud struct {
 
 func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	if id == 0 {
-		return nil, &http_boundary.ApiError{"Id required", http.StatusBadRequest}
+		return nil, &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
 	user, err := uc.dao.GetUser(id)
 	if err != nil {
-		return nil, &http_boundary.ApiError{"Cannot read user: " + err.Error(), http.StatusInternalServerError}
+		return nil, &http_boundary.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if user == nil {
-		return nil, &http_boundary.ApiError{"User not found", http.StatusNotFound}
+		return nil, &http_boundary.ApiError{Message: "User not found", StatusCode: http.StatusNotFound}
 	}
 
 	return user, nil
@@ -42,14 +42,14 @@ func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 
 func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	if user == nil {
-		return nil, &http_boundary.ApiError{"User details required", http.StatusUnprocessableEntity}
+		return nil, &http_boundary.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
 	}
 	exists, err := uc.dao.UserExists(user)
 	if err != nil {
-		return nil, &http_boundary.ApiError{"Cannot save user: " + err.Error(), http.StatusInternalServerError}
+		return nil, &http_boundary.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if exists {
-		return nil, &http_boundary.ApiError{"User already exists.", http.StatusConflict}
+		return nil, &http_boundary.ApiError{Message: "User already exists.", StatusCode: http.StatusConflict}
 	}
 
 	apiErr := validateAddUserPayload(user)
@@ -67,11 +67,11 @@ func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 
 func (uc *crud) DeleteUser(id int64) *http_boundary.ApiError {
 	if id == 0 {
-		return &http_boundary.ApiError{"Id required", http.StatusBadRequest}
+		return &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
 	err := uc.dao.DeleteUser(id)
 	if err != nil {
-		return &http_boundary.ApiError{"Cannot delete user: " + err.Error(), http.StatusInternalServerError}
+		return &http_boundary.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -80,6 +80,12 @@ func (uc *crud) DeleteUser(id int64) *http_boundary.ApiError {
 func validateAddUserPayload(user *User) *http_boundary.ApiError {
 	if !validateEmail(user.Email) {
 		return &http_boundary.ApiError{Message: "Invalid email address", StatusCode: http.StatusUnprocessableEntity}
+	}
+	if user.Name == "" {
+		return &http_boundary.ApiError{Message: "Name cannot be empty", StatusCode: http.StatusUnprocessableEntity}
+	}
+	if user.Password == "" {
+		return &http_boundary.ApiError{Message: "Password cannot be empty", StatusCode: http.StatusUnprocessableEntity}
 	}
 
 	return nil
