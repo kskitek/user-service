@@ -19,8 +19,19 @@ func Test(t *testing.T) {
 
 	expTime := time.Now().Add(time.Hour * 1)
 
-	token, err := out.GetToken("1742012414", &expTime)
+	userId := "1742012414"
+	token, err := out.GetToken(userId, &expTime)
+	assert.NoError(t, err)
+
+	result, err := out.Parse(token)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "", token)
+	assert.Equal(t, userId, result.UserId)
 }
+
+/* TODO
+-validate checks expiration date
+- validate checks presence of userId
+- getToken sets `exp` when expTime is nil
+- fixExpTime sets a 24H * 7
+ */
