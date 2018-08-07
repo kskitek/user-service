@@ -29,7 +29,7 @@ func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	if id == 0 {
 		return nil, &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
-	user, err := uc.dao.GetUser(id)
+	user, err := uc.dao.GetById(id)
 	if err != nil {
 		return nil, &http_boundary.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
@@ -44,7 +44,7 @@ func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	if user == nil {
 		return nil, &http_boundary.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
 	}
-	exists, err := uc.dao.UserExists(user)
+	exists, err := uc.dao.Exists(user)
 	if err != nil {
 		return nil, &http_boundary.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
@@ -56,7 +56,7 @@ func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	if apiErr != nil {
 		return nil, apiErr
 	}
-	newUser, err := uc.dao.AddUser(user)
+	newUser, err := uc.dao.Add(user)
 	newUser.Password = ""
 	if err != nil {
 		fmt.Println(err)
@@ -70,7 +70,7 @@ func (uc *crud) DeleteUser(id int64) *http_boundary.ApiError {
 	if id == 0 {
 		return &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
-	err := uc.dao.DeleteUser(id)
+	err := uc.dao.Delete(id)
 	if err != nil {
 		return &http_boundary.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}

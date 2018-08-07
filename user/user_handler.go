@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"strconv"
+	auth2 "gitlab.com/kskitek/arecar/user-service/auth"
 )
 
 type UserHandler struct {
-	uc Crud
+	crud Crud
+	auth Auth
 }
 
 type UserResponse struct {
@@ -18,12 +20,15 @@ type UserResponse struct {
 }
 
 func NewUserHandler() *UserHandler {
+	dao := &InMemDao{
+		make(map[string]*User),
+		make(map[string]*User),
+		make(map[string]*User),
+		int64(0),
+	}
 	return &UserHandler{
-		uc: &crud{dao: &InMemDao{
-			make(map[string]*User),
-			make(map[string]*User),
-			int64(0),
-		}},
+		crud: &crud{dao: dao},
+		auth: &auth{userDao: dao, authenticator: auth2.NewAuthenticator()},
 	}
 }
 
@@ -37,7 +42,7 @@ func (u *UserHandler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	user, err := u.uc.GetUser(intId)
+	user, err := u.crud.GetUser(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
@@ -58,7 +63,7 @@ func (u *UserHandler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	if decodeErr != nil {
 		err = &http_boundary.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		user, err = u.uc.AddUser(user)
+		user, err = u.crud.AddUser(user)
 	}
 
 	if err != nil {
@@ -82,7 +87,7 @@ func (u *UserHandler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	err = u.uc.DeleteUser(intId)
+	err = u.crud.DeleteUser(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
