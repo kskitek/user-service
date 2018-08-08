@@ -22,6 +22,10 @@ type AuthResult struct {
 	UserId string
 }
 
+const (
+	issuer = "user-service"
+)
+
 type jwtAuthenticator struct {
 	method jwt.SigningMethod
 	secret string
@@ -41,6 +45,7 @@ func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (s
 		StandardClaims: &jwt.StandardClaims{
 			ExpiresAt: expTime.Unix(),
 			IssuedAt:  time.Now().Unix(),
+			Issuer:    issuer,
 			Subject:   userId,
 		},
 	}

@@ -12,11 +12,18 @@ type authClaims struct {
 }
 
 func (c *authClaims) Valid() error {
-	if !c.VerifyExpiresAt(time.Now().Unix(), true) {
+	now := time.Now().Unix()
+	if !c.VerifyExpiresAt(now, true) {
 		return fmt.Errorf("token expired")
 	}
 	if !c.verifyUserId(true) {
 		return fmt.Errorf("invalid token")
+	}
+	if !c.VerifyIssuedAt(now, false) {
+		return fmt.Errorf("token used before issued")
+	}
+	if !c.VerifyIssuer(issuer, false) {
+		return fmt.Errorf("unknown issuer")
 	}
 	return nil
 }
