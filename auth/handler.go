@@ -1,35 +1,38 @@
-package user
+package auth
 
 import (
 	"gitlab.com/kskitek/arecar/user-service/http_boundary"
 	"net/http"
 	"encoding/json"
+	"gitlab.com/kskitek/arecar/user-service/user"
 )
 
+type handler struct {
+	s Service
+}
 type LoginResponse struct {
 	Token string `json:"token"`
 	*http_boundary.Response
 }
 
-// TODO create some kind of factory to provide daos
-func (a *UserHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
+func (a *handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var err *http_boundary.ApiError
-	user := &User{}
+	u := &user.User{}
 	selfHref := r.URL.Path
 	var token string
 
-	decodeErr := json.NewDecoder(r.Body).Decode(user)
+	decodeErr := json.NewDecoder(r.Body).Decode(u)
 	if decodeErr != nil {
 		err = &http_boundary.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		token, err = a.auth.Login(user.Name, user.Password)
+		token, err = a.s.Login(u.Name, u.Password)
 	}
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	} else {
-		selfHref += "/" + user.Id
+		selfHref += "/" + u.Id
 		response := authLink(selfHref)
 		responsePayload := &LoginResponse{Token: token, Response: response}
 		http_boundary.Respond(responsePayload, r.URL.Path, http.StatusCreated, w)

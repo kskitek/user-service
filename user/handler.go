@@ -6,12 +6,10 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"strconv"
-	auth2 "gitlab.com/kskitek/arecar/user-service/auth"
 )
 
-type UserHandler struct {
-	crud Crud
-	auth Auth
+type handler struct {
+	s Service
 }
 
 type UserResponse struct {
@@ -19,20 +17,7 @@ type UserResponse struct {
 	*http_boundary.Response
 }
 
-func NewUserHandler() *UserHandler {
-	dao := &InMemDao{
-		make(map[string]*User),
-		make(map[string]*User),
-		make(map[string]*User),
-		int64(0),
-	}
-	return &UserHandler{
-		crud: &crud{dao: dao},
-		auth: &auth{userDao: dao, authenticator: auth2.NewAuthenticator()},
-	}
-}
-
-func (u *UserHandler) handleUserGet(w http.ResponseWriter, r *http.Request) {
+func (u *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	var err *http_boundary.ApiError
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
@@ -42,7 +27,7 @@ func (u *UserHandler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	user, err := u.crud.GetUser(intId)
+	user, err := u.s.GetUser(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
@@ -54,7 +39,7 @@ func (u *UserHandler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UserHandler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
+func (u *handler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	var err *http_boundary.ApiError
 	user := &User{}
 	selfHref := r.URL.Path
@@ -63,7 +48,7 @@ func (u *UserHandler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	if decodeErr != nil {
 		err = &http_boundary.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		user, err = u.crud.AddUser(user)
+		user, err = u.s.AddUser(user)
 	}
 
 	if err != nil {
@@ -77,7 +62,7 @@ func (u *UserHandler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UserHandler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
+func (u *handler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 	var err *http_boundary.ApiError
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
@@ -87,7 +72,7 @@ func (u *UserHandler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	err = u.crud.DeleteUser(intId)
+	err = u.s.DeleteUser(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}

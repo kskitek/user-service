@@ -2,7 +2,7 @@ package user
 
 import "gitlab.com/kskitek/arecar/user-service/http_boundary"
 
-func (u *UserHandler) Routes() []*http_boundary.Route {
+func (u *handler) Routes() []*http_boundary.Route {
 	return []*http_boundary.Route{
 		{
 			Methods: []string{"GET"},
@@ -18,11 +18,6 @@ func (u *UserHandler) Routes() []*http_boundary.Route {
 			Methods: []string{"DELETE"},
 			Path:    "/user/{id}",
 			Handler: u.handleUserDelete,
-		},
-		{
-			Methods: []string{"POST"},
-			Path:    "/login",
-			Handler: u.handleLogin,
 		},
 	}
 }

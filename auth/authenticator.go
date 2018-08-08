@@ -31,13 +31,6 @@ type jwtAuthenticator struct {
 	secret string
 }
 
-func NewAuthenticator() Authenticator {
-	return &jwtAuthenticator{
-		method: jwt.SigningMethodHS256,
-		secret: "a2P5dgR2ya", // TODO Token from env?
-	}
-}
-
 func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (string, error) {
 	expTime := fixExpTimeWithDefault(expirationTime)
 	claims := &authClaims{

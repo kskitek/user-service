@@ -15,7 +15,7 @@ type User struct {
 	RegistrationDate time.Time `json:"registrationDate,omitempty"`
 }
 
-type Crud interface {
+type Service interface {
 	GetUser(int64) (*User, *http_boundary.ApiError)
 	AddUser(*User) (*User, *http_boundary.ApiError)
 	DeleteUser(int64) *http_boundary.ApiError

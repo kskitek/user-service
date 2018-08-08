@@ -2,6 +2,9 @@ package http_boundary
 
 import "fmt"
 
+type Handler interface {
+	Routes() []*Route
+}
 type HttpError struct {
 	Href *Link `json:"self"`
 	*ApiError
