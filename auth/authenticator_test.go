@@ -59,8 +59,15 @@ func Test_GivenNoUserIdThenException(t *testing.T) {
 	assert.Error(t, err)
 }
 
-/* TODO
-- validate checks presence of userId
-- getToken sets `exp` when expTime is nil
-- fixExpTime sets a 24H * 7
- */
+func Test_GivenTokenExpiredThenException(t *testing.T) {
+	out := newOut()
+
+	expTime := time.Now().AddDate(-1, 0, 0)
+
+	token, err := out.GetToken("1234", &expTime)
+	assert.NoError(t, err)
+
+	_, err = out.Parse(token)
+
+	assert.Error(t, err)
+}

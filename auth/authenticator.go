@@ -3,8 +3,6 @@ package auth
 import (
 	"time"
 	"github.com/dgrijalva/jwt-go"
-	"strings"
-	"errors"
 	"fmt"
 )
 
@@ -52,21 +50,7 @@ func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (s
 	return token.SignedString(key)
 }
 
-func (a *jwtAuthenticator) verify(token string) error {
-	segments := strings.Split(token, ".")
-	if len(segments) != 3 {
-		return errors.New("")
-	}
-	key := []byte(a.secret)
-	return a.method.Verify(segments[0], segments[1], key)
-}
-
 func (a *jwtAuthenticator) Parse(tokenString string) (*AuthResult, error) {
-	//err := a.verify(tokenString)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	token, err := jwt.ParseWithClaims(tokenString, &authClaims{}, a.jwtKeyFunc)
 	if err != nil {
 		return nil, err
