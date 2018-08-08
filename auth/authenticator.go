@@ -29,11 +29,6 @@ type jwtAuthenticator struct {
 	secret string
 }
 
-type authClaims struct {
-	User string `json:"user"`
-	*jwt.StandardClaims
-}
-
 func NewAuthenticator() Authenticator {
 	return &jwtAuthenticator{
 		method: jwt.SigningMethodHS256,
@@ -43,7 +38,7 @@ func NewAuthenticator() Authenticator {
 
 func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (string, error) {
 	expTime := fixExpTimeWithDefault(expirationTime)
-	claims := authClaims{
+	claims := &authClaims{
 		User: userId,
 		StandardClaims: &jwt.StandardClaims{
 			ExpiresAt: expTime.Unix(),
@@ -79,6 +74,9 @@ func (a *jwtAuthenticator) Parse(tokenString string) (*AuthResult, error) {
 	claims, ok := token.Claims.(*authClaims)
 	if !ok {
 		return nil, fmt.Errorf("unkown token claims %V", token.Claims)
+	}
+	if err = claims.Valid(); err != nil {
+		return nil, err
 	}
 
 	return claims.toAuthResult(), nil

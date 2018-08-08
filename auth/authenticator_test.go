@@ -46,8 +46,20 @@ func Test_GivenNilExpirationTimeThenDefaultIsSetToOneWeek(t *testing.T) {
 	assert.Equal(t, expected.Unix()/1000, actual.Unix()/1000)
 }
 
+func Test_GivenNoUserIdThenException(t *testing.T) {
+	out := newOut()
+
+	expTime := time.Now().Add(time.Hour * 1)
+
+	token, err := out.GetToken("", &expTime)
+	assert.NoError(t, err)
+
+	_, err = out.Parse(token)
+
+	assert.Error(t, err)
+}
+
 /* TODO
--validate checks expiration date
 - validate checks presence of userId
 - getToken sets `exp` when expTime is nil
 - fixExpTime sets a 24H * 7
