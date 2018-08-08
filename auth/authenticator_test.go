@@ -14,7 +14,7 @@ func newOut() Authenticator {
 	}
 }
 
-func Test(t *testing.T) {
+func Test_GivenUserIdThenUserIdIsPartOfToken(t *testing.T) {
 	out := newOut()
 
 	expTime := time.Now().Add(time.Hour * 1)
@@ -27,6 +27,23 @@ func Test(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, userId, result.UserId)
+}
+
+func Test_GivenNilExpirationTimeThenDefaultIsSet(t *testing.T) {
+	out := newOut()
+
+	var expTime *time.Time
+
+	userId := "1742012414"
+	_, err := out.GetToken(userId, expTime)
+	assert.NoError(t, err)
+}
+
+func Test_GivenNilExpirationTimeThenDefaultIsSetToOneWeek(t *testing.T) {
+	actual := fixExpTimeWithDefault(nil)
+	expected := time.Now().UTC().AddDate(0, 0, 7)
+
+	assert.Equal(t, expected.Unix()/1000, actual.Unix()/1000)
 }
 
 /* TODO

@@ -41,12 +41,12 @@ func NewAuthenticator() Authenticator {
 	}
 }
 
-func (a *jwtAuthenticator) GetToken(userId string, expTime *time.Time) (string, error) {
-	fixExpTimeWithDefault(expTime)
+func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (string, error) {
+	expTime := fixExpTimeWithDefault(expirationTime)
 	claims := authClaims{
 		User: userId,
 		StandardClaims: &jwt.StandardClaims{
-			ExpiresAt: (*expTime).Unix(),
+			ExpiresAt: expTime.Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Subject:   userId,
 		},
@@ -90,11 +90,12 @@ func (a *jwtAuthenticator) jwtKeyFunc(token *jwt.Token) (interface{}, error) {
 	return secret, nil
 }
 
-func fixExpTimeWithDefault(expTime *time.Time) {
+func fixExpTimeWithDefault(expTime *time.Time) time.Time {
 	if expTime == nil {
-		t := time.Now()
-		expTime = &t
-		expTime.Add(time.Hour * 24 * 7)
+		t := time.Now().UTC().Add(time.Hour * 24 * 7)
+		return t
+	} else {
+		return *expTime
 	}
 }
 
