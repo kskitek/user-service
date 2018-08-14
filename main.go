@@ -11,6 +11,7 @@ func main() {
 	setupLogger()
 
 	s := http_boundary.NewServer(getRoutes())
+	logrus.WithField("port", ":8080").Info("Starting")
 	logrus.Fatal(http.ListenAndServe(":8080", s.Router))
 }
 
