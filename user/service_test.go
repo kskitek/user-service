@@ -2,29 +2,39 @@ package user
 
 import (
 	"testing"
-	"time"
 	"github.com/stretchr/testify/assert"
 )
 
-var userOkId = int64(1)
-var userOk = &User{
-	Id:               "1",
-	Name:             "User1",
-	Password:         "Pwd",
-	Email:            "user1@gmail.com",
-	RegistrationDate: time.Now(),
+func Test_WhenGetUserGivenEmptyIdThenError(t *testing.T) {
+	out := &crud{NewMockDao()}
+	var id int64
+
+	_, apiError := out.GetUser(id)
+
+	assert.Error(t, apiError)
 }
 
-func newOut() Service {
-	dao := NewDao()
-	dao.Add(userOk)
-	return &crud{dao}
+func Test_WhenGetUserGivenErrorInDaoThenError(t *testing.T) {
+	out := &crud{NewMockDao()}
+
+	_, apiError := out.GetUser(UserErrorId)
+
+	assert.Error(t, apiError)
+}
+
+func Test_WhenGetUserGivenNoUserForIdThenError(t *testing.T) {
+	out := &crud{NewMockDao()}
+	notExistingId := int64(100100)
+
+	_, apiError := out.GetUser(notExistingId)
+
+	assert.Error(t, apiError)
 }
 
 func Test_WhenGetUserGivenUserHasPasswordThenReturnedPasswordIsEmpty(t *testing.T) {
-	out := newOut()
+	out := &crud{NewMockDao()}
 
-	user, apiError := out.GetUser(userOkId)
+	user, apiError := out.GetUser(UserOkId)
 
 	assert.Nil(t, apiError)
 

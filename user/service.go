@@ -26,11 +26,10 @@ type crud struct {
 }
 
 func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
-	if id == 0 {
+	if id <= 0 {
 		return nil, &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
 	user, err := uc.dao.GetById(id)
-	user.Password = ""
 	if err != nil {
 		return nil, &http_boundary.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
@@ -38,6 +37,7 @@ func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 		return nil, &http_boundary.ApiError{Message: "User not found", StatusCode: http.StatusNotFound}
 	}
 
+	user.Password = ""
 	return user, nil
 }
 
