@@ -58,12 +58,12 @@ func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 		return nil, apiErr
 	}
 	newUser, err := uc.dao.Add(user)
-	newUser.Password = ""
 	if err != nil {
 		fmt.Println(err)
 		return nil, &http_boundary.ApiError{Message: "Cannot add user", StatusCode: http.StatusUnprocessableEntity}
 	}
 
+	newUser.Password = ""
 	return newUser, nil
 }
 
