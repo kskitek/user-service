@@ -16,15 +16,15 @@ type service struct {
 }
 
 func (a *service) Login(name string, password string) (string, *http_boundary.ApiError) {
-	u, err := a.userDao.GetByName(name)
+	matching, err := a.userDao.MatchPassword(name, password)
 	if err != nil {
 		return "", &http_boundary.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
 	}
-	if u == nil || u.Password != password {
+	if !matching {
 		return "", &http_boundary.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
 	}
 
-	token, err := a.authenticator.GetToken(u.Name, nil)
+	token, err := a.authenticator.GetToken(name, nil)
 	if err != nil {
 		return "", &http_boundary.ApiError{Message: err.Error(), StatusCode: http.StatusInternalServerError}
 	}

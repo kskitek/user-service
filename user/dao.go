@@ -9,6 +9,7 @@ import (
 type Dao interface {
 	GetById(int64) (*User, error)
 	GetByName(string) (*User, error)
+	MatchPassword(userName string, password string) (bool, error)
 	Exists(*User) (bool, error)
 	Add(*User) (*User, error)
 	Delete(int64) error
@@ -45,6 +46,16 @@ func (d *InMemDao) GetById(id int64) (*User, error) {
 func (d *InMemDao) GetByName(name string) (*User, error) {
 	user := d.memByName[name]
 	return user, nil
+}
+
+func (d *InMemDao) MatchPassword(userName string, password string) (bool, error) {
+	user, err := d.GetByName(userName)
+	if err != nil {
+		return false, err
+	}
+
+	pwdMatching := user != nil && user.Password == password
+	return pwdMatching, nil
 }
 
 func (d *InMemDao) Exists(user *User) (bool, error) {
