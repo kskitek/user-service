@@ -1,7 +1,7 @@
 FROM scratch
 
-EXPORT 8080
+EXPOSE 8080
 
 ADD user-service_linux /srv/user-service
 
-RUN ["/srv/user-service"]
+CMD ["/srv/user-service"]
