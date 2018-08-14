@@ -27,7 +27,7 @@ func (u *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	user, err := u.s.GetUser(intId)
+	user, err := u.s.Get(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
@@ -48,7 +48,7 @@ func (u *handler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	if decodeErr != nil {
 		err = &http_boundary.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		user, err = u.s.AddUser(user)
+		user, err = u.s.Add(user)
 	}
 
 	if err != nil {
@@ -72,7 +72,7 @@ func (u *handler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
 		http_boundary.RespondWithError(httpErr, w)
 	}
-	err = u.s.DeleteUser(intId)
+	err = u.s.Delete(intId)
 
 	if err != nil {
 		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}

@@ -16,16 +16,16 @@ type User struct {
 }
 
 type Service interface {
-	GetUser(int64) (*User, *http_boundary.ApiError)
-	AddUser(*User) (*User, *http_boundary.ApiError)
-	DeleteUser(int64) *http_boundary.ApiError
+	Get(int64) (*User, *http_boundary.ApiError)
+	Add(*User) (*User, *http_boundary.ApiError)
+	Delete(int64) *http_boundary.ApiError
 }
 
 type crud struct {
 	dao Dao
 }
 
-func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
+func (uc *crud) Get(id int64) (*User, *http_boundary.ApiError) {
 	if id <= 0 {
 		return nil, &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
@@ -41,7 +41,7 @@ func (uc *crud) GetUser(id int64) (*User, *http_boundary.ApiError) {
 	return user, nil
 }
 
-func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
+func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 	if user == nil {
 		return nil, &http_boundary.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
 	}
@@ -67,7 +67,7 @@ func (uc *crud) AddUser(user *User) (*User, *http_boundary.ApiError) {
 	return newUser, nil
 }
 
-func (uc *crud) DeleteUser(id int64) *http_boundary.ApiError {
+func (uc *crud) Delete(id int64) *http_boundary.ApiError {
 	if id == 0 {
 		return &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
