@@ -1,0 +1,28 @@
+version: '3'
+services:
+  user-service:
+    image: kskitek/user-service:0.0.1
+    ports:
+    - 8080:8080
+    env_file:
+      user-service.env
+    links:
+    - postgres
+#    depends_on:
+#    - flyway
+
+  postgres:
+    image: postgres:10.5-alpine
+    ports:
+    - "5432:5432"
+    env_file:
+      postgres.env
+  #    volumes:
+  #    - a:a
+
+#  flyway:
+#    image: kskitek/user-service-flyway:0.0.1
+#    depends_on:
+#    - postgres
+#    links:
+#    - postgres

@@ -1,0 +1,5 @@
+FROM boxfuse/flyway:5.1.4-alpine
+
+ADD sql/*.sql /flyway/sql/
+
+ADD flyway.conf /flyway/conf

@@ -1,10 +1,12 @@
 # export CGO_ENABLED=0
 
 SVC_NAME = user-service
-VERSION = `git rev-parse --short HEAD`
+# VERSION = `git rev-parse --short HEAD`
+VERSION = 0.0.1
 
-DOCKER_REG = registry.gitlab.com/kskitek/arecar
-DOCKER_IMAGE = $(DOCKER_REG)/$(SVC_NAME):$(VERSION)
+DOCKER_REG = kskitek
+DOCKER_BASE_IMAGE = $(DOCKER_REG)/$(SVC_NAME):$(VERSION)
+DOCKER_FLYWAY_IMAGE = $(DOCKER_REG)/$(SVC_NAME)-flyway:$(VERSION)
 
 .PHONY: build build-docker clean
 
@@ -27,13 +29,15 @@ run: build
 
 build-docker: test build
 	env GOOS=linux go build -o $(SVC_NAME)_linux
-	docker build -t $(DOCKER_IMAGE) .
+	docker build -t $(DOCKER_BASE_IMAGE) .
+	docker build -t $(DOCKER_FLYWAY_IMAGE) -f Dockerfile-flyway .
 
-run-docker: build-docker
-	docker run -it --rm -p 8080:8080 $(DOCKER_IMAGE)
+run-docker:
+	docker-compose up
 
 push: build-docker
-	docker push $(DOCKER_IMAGE)
+	docker push $(DOCKER_BASE_IMAGE)
+	docker push $(DOCKER_FLYWAY_IMAGE)
 
 clean:
 	rm $(SVC_NAME); rm $(SVC_NAME)_linux

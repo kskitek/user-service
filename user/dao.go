@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 	"fmt"
+	_ "github.com/lib/pq"
+	"database/sql"
 )
 
 type Dao interface {
@@ -75,4 +77,52 @@ func (d *InMemDao) Delete(id int64) error {
 		delete(d.memByEmail, user.Email)
 	}
 	return nil
+}
+
+type pgDao struct {
+	db *sql.DB
+}
+
+func (d *pgDao) GetById(id int64) (*User, error) {
+	u := &User{}
+	err := d.db.QueryRow("SELECT id, name, email, password, creationDate FROM users WHERE ID = $1", id).
+		Scan(u.Id, u.Name, u.Email, u.Password, u.RegistrationDate)
+
+	switch err {
+	case nil:
+		return u, nil
+	case sql.ErrNoRows:
+		return nil, nil
+	default:
+		return nil, err
+	}
+
+}
+
+func (*pgDao) GetByName(string) (*User, error) {
+	panic("implement me")
+}
+
+func (*pgDao) MatchPassword(userName string, password string) (bool, error) {
+	panic("implement me")
+}
+
+func (*pgDao) Exists(*User) (bool, error) {
+	panic("implement me")
+}
+
+func (*pgDao) Add(*User) (*User, error) {
+	panic("implement me")
+}
+
+func (*pgDao) Delete(int64) error {
+	panic("implement me")
+}
+
+func NewPgDao() Dao {
+	// TODO connStr from env/params/config
+	connStr := ""
+	db, err := sql.Open("postgres", connStr)
+
+	return &pgDao{db}
 }

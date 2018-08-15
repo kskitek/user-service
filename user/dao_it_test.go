@@ -116,6 +116,8 @@ func Test_MatchPassword_UserExists_PasswordIsCompared(t *testing.T) {
 	assert.True(t, matching)
 }
 
+// TODO check that password is saved hashed
+
 func getTestUser(t *testing.T) *User {
 	return &User{
 		Name:     t.Name(),
