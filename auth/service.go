@@ -18,7 +18,7 @@ type service struct {
 func (a *service) Login(name string, password string) (string, *http_boundary.ApiError) {
 	matching, err := a.userDao.MatchPassword(name, password)
 	if err != nil {
-		return "", &http_boundary.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
+		return "", &http_boundary.ApiError{Message: "Error when checking password: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if !matching {
 		return "", &http_boundary.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
