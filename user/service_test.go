@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_WhenGetUserGivenEmptyIdThenError(t *testing.T) {
+func Test_GetUser_EmptyId_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 	var id int64
 
@@ -14,7 +14,7 @@ func Test_WhenGetUserGivenEmptyIdThenError(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_WhenGetUserGivenErrorInDaoThenError(t *testing.T) {
+func Test_GetUser_ErrorInDao_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	_, apiError := out.Get(UserErrorId)
@@ -22,7 +22,7 @@ func Test_WhenGetUserGivenErrorInDaoThenError(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_WhenGetUserGivenNoUserForIdThenError(t *testing.T) {
+func Test_GetUser_NoUserForId_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 	notExistingId := int64(100100)
 
@@ -31,7 +31,7 @@ func Test_WhenGetUserGivenNoUserForIdThenError(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_WhenAddGivenNilUserThenError(t *testing.T) {
+func Test_Add_NilUser_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 	var user *User
 
@@ -40,7 +40,7 @@ func Test_WhenAddGivenNilUserThenError(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_WhenAddGivenErrorInDaoThenError(t *testing.T) {
+func Test_Add_ErrorInDao_Error(t *testing.T) {
 	users := []*User{UserError(), UserAddError()}
 	for _, user := range users {
 		out := &crud{NewMockDao()}
@@ -51,7 +51,7 @@ func Test_WhenAddGivenErrorInDaoThenError(t *testing.T) {
 	}
 }
 
-func Test_WhenAddGivenUserExistsThenError(t *testing.T) {
+func Test_Add_UserExists_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	_, apiError := out.Add(UserExists())
@@ -59,7 +59,7 @@ func Test_WhenAddGivenUserExistsThenError(t *testing.T) {
 	assert.Error(t, apiError)
 }
 
-func Test_WhenAddGivenOkThenReturnedPasswordIsEmpty(t *testing.T) {
+func Test_Add_Ok_ReturnedPasswordIsEmpty(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	user, apiError := out.Add(UserOk())
@@ -69,7 +69,7 @@ func Test_WhenAddGivenOkThenReturnedPasswordIsEmpty(t *testing.T) {
 	assert.Equal(t, "", user.Password)
 }
 
-func Test_WhenAddGivenNoNameThenError(t *testing.T) {
+func Test_Add_NoName_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	user := UserOk()
@@ -79,7 +79,7 @@ func Test_WhenAddGivenNoNameThenError(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_WhenAddGivenNoPasswordThenError(t *testing.T) {
+func Test_Add_NoPassword_Error(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	user := UserOk()

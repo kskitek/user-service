@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+	"fmt"
 )
 
 type Dao interface {
@@ -13,21 +14,6 @@ type Dao interface {
 	Exists(*User) (bool, error)
 	Add(*User) (*User, error)
 	Delete(int64) error
-}
-
-type MongoDao struct {
-}
-
-func (d *MongoDao) GetUser(int64) (*User, error) {
-	return nil, nil
-}
-
-func (d *MongoDao) UserExists(*User) (bool, error) {
-	return false, nil
-}
-
-func (d *MongoDao) AddUser(user *User) (*User, error) {
-	return user, nil
 }
 
 type InMemDao struct {
@@ -59,7 +45,7 @@ func (d *InMemDao) MatchPassword(userName string, password string) (bool, error)
 }
 
 func (d *InMemDao) Exists(user *User) (bool, error) {
-	_, exists := d.memByEmail[user.Email]
+	_, exists := d.memByName[user.Name]
 	return exists, nil
 }
 
@@ -67,6 +53,12 @@ func (d *InMemDao) Add(user *User) (*User, error) {
 	newId := atomic.AddInt64(&d.currId, 1)
 	user.Id = strconv.FormatInt(newId, 10)
 	user.RegistrationDate = time.Now().UTC()
+
+	_, byName := d.memByName[user.Name]
+	_, byEmail := d.memByEmail[user.Email]
+	if byName || byEmail {
+		return nil, fmt.Errorf("user already exists")
+	}
 
 	d.mem[user.Id] = user
 	d.memByName[user.Name] = user
