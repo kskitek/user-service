@@ -27,6 +27,7 @@ func (c *authClaims) Valid() error {
 	}
 	return nil
 }
+
 func (c *authClaims) verifyUserId(req bool) bool {
 	if c.User == "" && req {
 		return false

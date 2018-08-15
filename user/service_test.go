@@ -41,11 +41,14 @@ func Test_WhenAddGivenNilUserThenError(t *testing.T) {
 }
 
 func Test_WhenAddGivenErrorInDaoThenError(t *testing.T) {
-	out := &crud{NewMockDao()}
+	users := []*User{UserError(), UserAddError()}
+	for _, user := range users {
+		out := &crud{NewMockDao()}
 
-	_, apiError := out.Add(UserError())
+		_, apiError := out.Add(user)
 
-	assert.NotNil(t, apiError)
+		assert.NotNil(t, apiError)
+	}
 }
 
 func Test_WhenAddGivenUserExistsThenError(t *testing.T) {
@@ -66,7 +69,65 @@ func Test_WhenAddGivenOkThenReturnedPasswordIsEmpty(t *testing.T) {
 	assert.Equal(t, "", user.Password)
 }
 
-func Test_WhenGetUserGivenUserHasPasswordThenReturnedPasswordIsEmpty(t *testing.T) {
+func Test_WhenAddGivenNoNameThenError(t *testing.T) {
+	out := &crud{NewMockDao()}
+
+	user := UserOk()
+	user.Name = ""
+	_, apiError := out.Add(user)
+
+	assert.NotNil(t, apiError)
+}
+
+func Test_WhenAddGivenNoPasswordThenError(t *testing.T) {
+	out := &crud{NewMockDao()}
+
+	user := UserOk()
+	user.Password = ""
+	_, apiError := out.Add(user)
+
+	assert.NotNil(t, apiError)
+}
+
+func Test_Add_NoEmail_Error(t *testing.T) {
+	out := &crud{NewMockDao()}
+
+	user := UserOk()
+	user.Email = ""
+	_, apiError := out.Add(user)
+
+	assert.NotNil(t, apiError)
+}
+
+func Test_Delete_EmptyId_Error(t *testing.T) {
+	out := &crud{NewMockDao()}
+	var id int64
+
+	apiError := out.Delete(id)
+
+	assert.NotNil(t, apiError)
+}
+
+func Test_Delete_ErrorInDao_Error(t *testing.T) {
+	out := &crud{NewMockDao()}
+
+	apiError := out.Delete(UserErrorId)
+
+	assert.NotNil(t, apiError)
+}
+
+func Test_Delete_UserExistsOrNot_NoError(t *testing.T) {
+	users := []int64{UserOkId, UserExistsId}
+	for _, userId := range users {
+		out := &crud{NewMockDao()}
+
+		apiError := out.Delete(userId)
+
+		assert.Nil(t, apiError)
+	}
+}
+
+func Test_Get_UserHasPassword_ReturnedPasswordIsEmpty(t *testing.T) {
 	out := &crud{NewMockDao()}
 
 	user, apiError := out.Get(UserExistsId)

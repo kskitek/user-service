@@ -41,6 +41,18 @@ func UserError() *User {
 	}
 }
 
+var UserAddErrorId = int64(11)
+
+func UserAddError() *User {
+	return &User{
+		Id:               "11",
+		Name:             "User11",
+		Password:         "Pwd",
+		Email:            "user11@gmail.com",
+		RegistrationDate: time.Now(),
+	}
+}
+
 func NewMockDao() Dao {
 	return &MockDao{}
 }
@@ -87,7 +99,7 @@ func (d *MockDao) Exists(user *User) (bool, error) {
 }
 
 func (d *MockDao) Add(user *User) (*User, error) {
-	if user.Id == UserError().Id {
+	if user.Id == UserError().Id || user.Id == UserAddError().Id {
 		return nil, fmt.Errorf("test error")
 	}
 	return UserOk(), nil
