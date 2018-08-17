@@ -9,7 +9,7 @@ var UserOkId = int64(1)
 
 func UserOk() *User {
 	return &User{
-		Id:               "0",
+		Id:               "-1",
 		Name:             "User1",
 		Password:         "Pwd",
 		Email:            "user1@gmail.com",
@@ -19,7 +19,7 @@ func UserOk() *User {
 
 func UserOk2() *User {
 	return &User{
-		Id:               "0",
+		Id:               "-1",
 		Name:             "User2",
 		Password:         "Pwd",
 		Email:            "user2@gmail.com",

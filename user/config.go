@@ -15,11 +15,11 @@ func NewService() Service {
 }
 
 func NewDao() Dao {
-	//return NewPgDao()
-	return &InMemDao{
-		currId:     0,
-		mem:        make(map[string]*User),
-		memByName:  make(map[string]*User),
-		memByEmail: make(map[string]*User),
-	}
+	return NewPgDao()
+	//return &InMemDao{
+	//	currId:     0,
+	//	mem:        make(map[string]*User),
+	//	memByName:  make(map[string]*User),
+	//	memByEmail: make(map[string]*User),
+	//}
 }

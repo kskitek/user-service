@@ -118,8 +118,16 @@ func (*pgDao) Exists(*User) (bool, error) {
 	panic("implement me")
 }
 
-func (*pgDao) Add(*User) (*User, error) {
-	panic("implement me")
+func (d *pgDao) Add(u *User) (*User, error) {
+	var id int64
+	err := d.db.QueryRow("INSERT INTO users (name, email, password, creationDate) VALUES ($1, $2, $3, $4) RETURNING id",
+		u.Name, u.Email, u.Password, u.RegistrationDate).Scan(&id)
+	if err == nil {
+		u.Id = strconv.FormatInt(id, 10)
+		return u, err
+	}
+
+	return nil, err
 }
 
 func (*pgDao) Delete(int64) error {
