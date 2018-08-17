@@ -23,12 +23,15 @@ verify:
 test: verify
 	go test -race ./...
 
-test-pre-it: flyway-migrate
+test-pre-it-docker:
 	docker run -d --name=$(SVC_NAME)_pg \
 	--env POSTGRES_PASSWORD=verySecretPassword --env POSTGRES_USER=user-service --env POSTGRES_DB=user-service \
 	-p 5432:5432 postgres:10.5-alpine
+	sleep 5
 
-test-it: test clean
+test-pre-it: clean-test-it test-pre-it-docker flyway-migrate
+
+test-it: test test-pre-it
 	env $$(cat config/user-service-it.env) go test -v -race -tags=it ./...
 
 build:
@@ -58,8 +61,10 @@ flyway-migrate:
 	cp -fr sql flyway-$(FLYWAY_VERSION)/sql
 	flyway-$(FLYWAY_VERSION)/flyway migrate
 
-clean:
-	rm $(SVC_NAME); rm $(SVC_NAME)_linux ; echo ""
+clean-test-it:
 	docker-compose stop ; echo ""
 	docker stop $(SVC_NAME)_pg ; echo ""
 	docker container rm $(SVC_NAME)_pg ; echo ""
+
+clean: clean-test-it
+	rm $(SVC_NAME); rm $(SVC_NAME)_linux ; echo ""

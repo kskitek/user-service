@@ -3,62 +3,45 @@ package user
 import (
 	"time"
 	"fmt"
+	"strconv"
 )
+
+var testSuffix = strconv.FormatInt(time.Now().Unix(), 10)
 
 var UserOkId = int64(1)
 
-func UserOk() *User {
+func newUser(id string, name string) *User {
 	return &User{
-		Id:               "-1",
-		Name:             "User1",
+		Id:               id,
+		Name:             name + testSuffix,
 		Password:         "Pwd",
-		Email:            "user1@gmail.com",
-		RegistrationDate: time.Now(),
+		Email:            name + testSuffix + "@gmail.com",
+		RegistrationDate: time.Now().UTC(),
 	}
 }
 
+func UserOk() *User {
+	return newUser("-1", "User1_")
+}
+
 func UserOk2() *User {
-	return &User{
-		Id:               "-1",
-		Name:             "User2",
-		Password:         "Pwd",
-		Email:            "user2@gmail.com",
-		RegistrationDate: time.Now(),
-	}
+	return newUser("-1", "User2_")
 }
 
 var UserExistsId = int64(20)
 
 func UserExists() *User {
-	return &User{
-		Id:               "20",
-		Name:             "User20",
-		Password:         "Pwd",
-		Email:            "user20@gmail.com",
-		RegistrationDate: time.Now(),
-	}
+	return newUser("20", "User20_")
 }
 
 var UserErrorId = int64(10)
 
 func UserError() *User {
-	return &User{
-		Id:               "10",
-		Name:             "User10",
-		Password:         "Pwd",
-		Email:            "user10@gmail.com",
-		RegistrationDate: time.Now(),
-	}
+	return newUser("10", "User10_")
 }
 
 func UserAddError() *User {
-	return &User{
-		Id:               "11",
-		Name:             "User11",
-		Password:         "Pwd",
-		Email:            "user11@gmail.com",
-		RegistrationDate: time.Now(),
-	}
+	return newUser("11", "User11_")
 }
 
 func NewMockDao() Dao {

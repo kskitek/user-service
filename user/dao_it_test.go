@@ -6,6 +6,7 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"strconv"
+	"time"
 )
 
 var out = NewDao()
@@ -22,11 +23,7 @@ func Test_Add_OkUser_ReturnsUserWithNewId(t *testing.T) {
 }
 
 func Test_Add_TheSameUserTwoTimes_Error(t *testing.T) {
-	user := &User{
-		Name:     t.Name(),
-		Email:    t.Name() + "@gmail.com",
-		Password: "pwd",
-	}
+	user := getTestUser(t)
 	_, err1 := out.Add(user)
 	_, err2 := out.Add(user)
 
@@ -119,9 +116,11 @@ func Test_MatchPassword_UserExists_PasswordIsCompared(t *testing.T) {
 // TODO check that password is saved hashed
 
 func getTestUser(t *testing.T) *User {
+	regT := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
 	return &User{
-		Name:     t.Name(),
-		Email:    t.Name() + "@gmail.com",
-		Password: "pwd",
+		Name:             t.Name() + "_" + testSuffix,
+		Email:            t.Name() + "_" + testSuffix + "@gmail.com",
+		Password:         "pwd",
+		RegistrationDate: regT,
 	}
 }

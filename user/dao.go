@@ -83,22 +83,28 @@ func (d *InMemDao) Delete(id int64) error {
 	return nil
 }
 
+const (
+	allUserFields = " id, name, email, password, creationDate "
+	getByPattern  = "SELECT " + allUserFields + " FROM users WHERE %s = $1"
+)
+
 type pgDao struct {
 	db *sql.DB
 }
 
 func (d *pgDao) GetById(id int64) (*User, error) {
-	return d.getUser("SELECT id, name, email, password, creationDate FROM users WHERE id= $1", id)
+	return d.getUser(fmt.Sprintf(getByPattern, "id"), id)
 }
 
 func (d *pgDao) GetByName(name string) (*User, error) {
-	return d.getUser("SELECT id, name, email, password, creationDate FROM users WHERE name = $1", name)
+	return d.getUser(fmt.Sprintf(getByPattern, "name"), name)
 }
 
-func (d *pgDao) getUser(query string, param interface{}) (*User, error) {
+func (d *pgDao) getUser(query string, params ...interface{}) (*User, error) {
 	u := &User{}
-	err := d.db.QueryRow(query, param).
-		Scan(u.Id, u.Name, u.Email, u.Password, u.RegistrationDate)
+	err := d.db.QueryRow(query, params...).
+		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.RegistrationDate)
+	u.RegistrationDate = u.RegistrationDate.In(time.UTC)
 
 	switch err {
 	case nil:
@@ -110,18 +116,21 @@ func (d *pgDao) getUser(query string, param interface{}) (*User, error) {
 	}
 }
 
-func (*pgDao) MatchPassword(userName string, password string) (bool, error) {
-	panic("implement me")
+func (d *pgDao) MatchPassword(userName string, password string) (bool, error) {
+	user, err := d.getUser("SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, password)
+	return user != nil, err
 }
 
-func (*pgDao) Exists(*User) (bool, error) {
-	panic("implement me")
+func (d *pgDao) Exists(u *User) (bool, error) {
+	user, err := d.GetByName(u.Name)
+	return user != nil, err
 }
 
 func (d *pgDao) Add(u *User) (*User, error) {
 	var id int64
+	regDate := u.RegistrationDate.In(time.UTC)
 	err := d.db.QueryRow("INSERT INTO users (name, email, password, creationDate) VALUES ($1, $2, $3, $4) RETURNING id",
-		u.Name, u.Email, u.Password, u.RegistrationDate).Scan(&id)
+		u.Name, u.Email, u.Password, regDate).Scan(&id)
 	if err == nil {
 		u.Id = strconv.FormatInt(id, 10)
 		return u, err
@@ -130,8 +139,9 @@ func (d *pgDao) Add(u *User) (*User, error) {
 	return nil, err
 }
 
-func (*pgDao) Delete(int64) error {
-	panic("implement me")
+func (d *pgDao) Delete(id int64) error {
+	_, err := d.db.Exec("DELETE FROM users WHERE id = $1", id)
+	return err
 }
 
 func NewPgDao() Dao {
