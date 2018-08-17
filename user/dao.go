@@ -7,7 +7,11 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"database/sql"
+	"github.com/sirupsen/logrus"
+	"os"
 )
+
+const defaultTimeout = "5m"
 
 type Dao interface {
 	GetById(int64) (*User, error)
@@ -84,8 +88,16 @@ type pgDao struct {
 }
 
 func (d *pgDao) GetById(id int64) (*User, error) {
+	return d.getUser("SELECT id, name, email, password, creationDate FROM users WHERE id= $1", id)
+}
+
+func (d *pgDao) GetByName(name string) (*User, error) {
+	return d.getUser("SELECT id, name, email, password, creationDate FROM users WHERE name = $1", name)
+}
+
+func (d *pgDao) getUser(query string, param interface{}) (*User, error) {
 	u := &User{}
-	err := d.db.QueryRow("SELECT id, name, email, password, creationDate FROM users WHERE ID = $1", id).
+	err := d.db.QueryRow(query, param).
 		Scan(u.Id, u.Name, u.Email, u.Password, u.RegistrationDate)
 
 	switch err {
@@ -96,11 +108,6 @@ func (d *pgDao) GetById(id int64) (*User, error) {
 	default:
 		return nil, err
 	}
-
-}
-
-func (*pgDao) GetByName(string) (*User, error) {
-	panic("implement me")
 }
 
 func (*pgDao) MatchPassword(userName string, password string) (bool, error) {
@@ -120,9 +127,48 @@ func (*pgDao) Delete(int64) error {
 }
 
 func NewPgDao() Dao {
-	// TODO connStr from env/params/config
-	connStr := ""
-	db, err := sql.Open("postgres", connStr)
+	connStr := os.Getenv("DB_CONN_STR")
+	timeout := getTimeout()
+	db := getDb(connStr, timeout)
+
+	db.SetMaxOpenConns(10)
+	db.SetConnMaxLifetime(time.Minute * 10)
+	db.SetMaxIdleConns(10 / 2)
 
 	return &pgDao{db}
+}
+
+func getTimeout() time.Duration {
+	timeoutStr := os.Getenv("DB_TIMEOUT")
+	if timeoutStr == "" {
+		timeoutStr = defaultTimeout
+	}
+	timeout, err := time.ParseDuration(timeoutStr)
+	if err != nil {
+		logrus.WithField("timeoutStr", timeoutStr).Panic("cannot read database timeout string")
+	}
+	return timeout
+}
+
+func getDb(connStr string, timeout time.Duration) *sql.DB {
+	start := time.Now()
+	logrus.Info("trying to connect to database")
+
+	for {
+		db, err := sql.Open("postgres", connStr)
+		if err == nil {
+			err = db.Ping()
+		}
+		if err != nil {
+			logrus.WithError(err).Warning("unable to connect to database")
+			time.Sleep(timeout / 10)
+			timePassed := time.Since(start)
+			if timePassed > timeout {
+				logrus.WithFields(logrus.Fields{"timeout": timeout, "connStr": connStr}).Panic("unable to connect to database within time limit")
+			}
+		} else {
+			logrus.Info("got connection to database")
+			return db
+		}
+	}
 }

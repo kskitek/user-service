@@ -5,7 +5,7 @@ services:
     ports:
     - 8080:8080
     env_file:
-      user-service.env
+      config/user-service.env
     links:
     - postgres
 #    depends_on:
@@ -16,7 +16,7 @@ services:
     ports:
     - "5432:5432"
     env_file:
-      postgres.env
+      config/postgres.env
   #    volumes:
   #    - a:a
 

@@ -15,6 +15,7 @@ func NewService() Service {
 }
 
 func NewDao() Dao {
+	//return NewPgDao()
 	return &InMemDao{
 		currId:     0,
 		mem:        make(map[string]*User),
