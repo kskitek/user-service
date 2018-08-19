@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"fmt"
 	"gitlab.com/kskitek/arecar/user-service/http_boundary"
+	"gitlab.com/kskitek/arecar/user-service/events"
 )
 
 type User struct {
@@ -22,7 +23,8 @@ type Service interface {
 }
 
 type crud struct {
-	dao Dao
+	dao      Dao
+	notifier events.Notifier
 }
 
 func (uc *crud) Get(id int64) (*User, *http_boundary.ApiError) {
@@ -64,6 +66,8 @@ func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 	}
 
 	newUser.Password = ""
+	n := &events.Notification{Payload: newUser}
+	uc.notifier.Notify(n)
 	return newUser, nil
 }
 
