@@ -129,7 +129,12 @@ func (d *pgDao) Exists(u *User) (bool, error) {
 func (d *pgDao) Add(u *User) (*User, error) {
 	var id int64
 	regDate := u.RegistrationDate.In(time.UTC)
-	err := d.db.QueryRow("INSERT INTO users (name, email, password, creationDate) VALUES ($1, $2, $3, $4) RETURNING id",
+	pwd, err := hashPassword(u.Password)
+	if err != nil {
+		return u, err
+	}
+	u.Password = pwd
+	err = d.db.QueryRow("INSERT INTO users (name, email, password, creationDate) VALUES ($1, $2, $3, $4) RETURNING id",
 		u.Name, u.Email, u.Password, regDate).Scan(&id)
 	if err == nil {
 		u.Id = strconv.FormatInt(id, 10)

@@ -94,7 +94,7 @@ func Test_AfterDelete_CannotGetUser(t *testing.T) {
 func Test_MatchPassword_UserNotExists_False(t *testing.T) {
 	user := getTestUser(t)
 
-	matching, err := out.MatchPassword(user.Name, "pwd")
+	matching, err := out.MatchPassword(user.Name, user.Password)
 	assert.Nil(t, err)
 
 	assert.False(t, matching)
@@ -108,12 +108,26 @@ func Test_MatchPassword_UserExists_PasswordIsCompared(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, matching)
 
-	matching, err = out.MatchPassword(user.Name, "pwd")
+	matching, err = out.MatchPassword(user.Name, user.Password)
 	assert.Nil(t, err)
 	assert.True(t, matching)
 }
 
-// TODO check that password is saved hashed
+func Test_Add_Password_PasswordIsSavedHashed(t *testing.T) {
+	user := getTestUser(t)
+	user.Password = "pwd"
+	pwdHash := "oRWenfNnDVSdBFJFMmKfVHfOt97sm0XkfowAlQbsssg="
+	origPwd := user.Password
+
+	out.Add(user)
+	matching, err := out.MatchPassword(user.Name, origPwd)
+	assert.Nil(t, err)
+	assert.False(t, matching)
+
+	matching, err = out.MatchPassword(user.Name, pwdHash)
+	assert.Nil(t, err)
+	assert.True(t, matching)
+}
 
 func getTestUser(t *testing.T) *User {
 	regT := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
