@@ -6,9 +6,11 @@ func NewInMemNotifier() Notifier {
 
 type MemNotifier struct {
 	Events []*Notification
+	Topics []string
 }
 
-func (mem *MemNotifier) Notify(n *Notification) error {
+func (mem *MemNotifier) Notify(topic string, n *Notification) error {
 	mem.Events = append(mem.Events, n)
+	mem.Topics = append(mem.Topics, topic)
 	return nil
 }

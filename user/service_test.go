@@ -4,6 +4,7 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/kskitek/arecar/user-service/events"
+	"github.com/sirupsen/logrus"
 )
 
 func newOut() Service {
@@ -167,9 +168,62 @@ func Test_Add_OkUser_Notifies(t *testing.T) {
 
 	assert.NotEmpty(t, notifier.Events)
 	lastEvent := notifier.Events[0]
+	topic := notifier.Topics[0]
 	assert.Equal(t, userAdded, lastEvent.Payload)
+	assert.Equal(t, "create", lastEvent.Event)
+	assert.Equal(t, CrudTopic, topic)
 }
 
-//func Test_Add_NotifierFails_NothingHappens?(t *testing.T) {
-//
-//}
+// TODO now I'm lost in mocks.. restructure/split/rename
+func Test_Add_NotifierFails_ErrorIsLogged(t *testing.T) {
+	notif := &mockNotifier{}
+	out := newOut().(*crud)
+	out.notifier = notif
+	hook := &testHook{}
+	logrus.AddHook(hook)
+	user := UserOk()
+
+	newUser, err := out.Add(user)
+	n := &events.Notification{Payload: newUser, Event: "create"}
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, notifierMockError, hook.lastError)
+	assert.Equal(t, n, hook.lastNotification)
+}
+
+func Test_Delete_OkUser_Notifies(t *testing.T) {
+	out, _, notif := newOutPlus()
+	notifier := notif.(*events.MemNotifier)
+	user := UserOk()
+
+	_, err := out.Add(user)
+	err = out.Delete(UserOkId)
+
+	assert.Nil(t, err)
+
+	assert.NotEmpty(t, notifier.Events)
+	lastEvent := notifier.Events[1]
+	topic := notifier.Topics[1]
+	assert.Equal(t, UserOkId, lastEvent.Payload)
+	assert.Equal(t, "delete", lastEvent.Event)
+	assert.Equal(t, CrudTopic, topic)
+}
+
+func Test_Delete_NotifierFails_ErrorIsLogger(t *testing.T) {
+	notif := &mockNotifier{}
+	out := newOut().(*crud)
+	out.notifier = notif
+	hook := &testHook{}
+	logrus.AddHook(hook)
+	user := UserOk()
+
+	_, err := out.Add(user)
+	err = out.Delete(UserOkId)
+	n := &events.Notification{Payload: UserOkId, Event: "delete"}
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, notifierMockError, hook.lastError)
+	assert.Equal(t, n, hook.lastNotification)
+}
