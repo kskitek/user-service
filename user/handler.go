@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"strconv"
+	"fmt"
 )
 
 type handler struct {
@@ -22,9 +23,9 @@ func (u *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
 
-	intId, parseErr := strconv.ParseInt(id, 10, 64)
+	intId, parseErr := stringToId(id)
 	if parseErr != nil {
-		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
+		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: parseErr}
 		http_boundary.RespondWithError(httpErr, w)
 	}
 	user, err := u.s.Get(intId)
@@ -37,6 +38,14 @@ func (u *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 		responsePayload := &UserResponse{User: user, Response: response}
 		http_boundary.Respond(responsePayload, r.URL.Path, http.StatusOK, w)
 	}
+}
+
+func stringToId(id string) (int64, *http_boundary.ApiError) {
+	intId, parseErr := strconv.ParseInt(id, 10, 64)
+	if parseErr != nil {
+		return 0, &http_boundary.ApiError{Message: fmt.Sprintf("cannot parse '%s' as user id", id), StatusCode: http.StatusBadRequest}
+	}
+	return intId, nil
 }
 
 func (u *handler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
@@ -67,9 +76,9 @@ func (u *handler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
 
-	intId, parseErr := strconv.ParseInt(id, 10, 64)
+	intId, parseErr := stringToId(id)
 	if parseErr != nil {
-		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: err}
+		httpErr := &http_boundary.HttpError{Href: &http_boundary.Link{Href: selfHref}, ApiError: parseErr}
 		http_boundary.RespondWithError(httpErr, w)
 	}
 	err = u.s.Delete(intId)
