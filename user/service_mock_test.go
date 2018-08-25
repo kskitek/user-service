@@ -4,7 +4,6 @@ import (
 	"time"
 	"fmt"
 	"strconv"
-	"gitlab.com/kskitek/arecar/user-service/events"
 )
 
 var testSuffix = strconv.FormatInt(time.Now().Unix(), 10)
@@ -102,13 +101,4 @@ func (d *MockDao) Delete(id int64) error {
 		return fmt.Errorf("test error")
 	}
 	return nil
-}
-
-type mockNotifier struct {
-}
-
-var notifierMockError = fmt.Errorf("test error")
-
-func (*mockNotifier) Notify(string, *events.Notification) error {
-	return notifierMockError
 }

@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"fmt"
 	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"gitlab.com/kskitek/arecar/user-service/events"
+	"gitlab.com/kskitek/arecar/user-service/event"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	CrudTopic = "v1/users/crud"
+	CrudBaseTopic = "user-service.v1.crud"
 )
 
 type User struct {
@@ -29,7 +29,7 @@ type Service interface {
 
 type crud struct {
 	dao      Dao
-	notifier events.Notifier
+	notifier event.Notifier
 }
 
 func (uc *crud) Get(id int64) (*User, *http_boundary.ApiError) {
@@ -71,8 +71,8 @@ func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 	}
 
 	newUser.Password = ""
-	n := &events.Notification{Payload: newUser, Event: "create"}
-	err = uc.notifier.Notify(CrudTopic, n)
+	n := event.Notification{Payload: newUser}
+	err = uc.notifier.Notify(CrudBaseTopic+".add", n)
 	if err != nil {
 		logrus.WithError(err).WithField("notification", n).Error("error when notifying about new user")
 	}
@@ -87,8 +87,8 @@ func (uc *crud) Delete(id int64) *http_boundary.ApiError {
 	if err != nil {
 		return &http_boundary.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
-	n := &events.Notification{Payload: id, Event: "delete"}
-	err = uc.notifier.Notify(CrudTopic, n)
+	n := event.Notification{Payload: id}
+	err = uc.notifier.Notify(CrudBaseTopic+".delete", n)
 	if err != nil {
 		logrus.WithError(err).WithField("notification", n).Error("error when notifying about deleted user")
 	}

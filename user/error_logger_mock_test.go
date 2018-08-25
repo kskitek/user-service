@@ -2,12 +2,12 @@ package user
 
 import (
 	"github.com/sirupsen/logrus"
-	"gitlab.com/kskitek/arecar/user-service/events"
+	"gitlab.com/kskitek/arecar/user-service/event"
 )
 
 type testHook struct {
 	lastError        error
-	lastNotification *events.Notification
+	lastNotification *event.Notification
 }
 
 func (*testHook) Levels() []logrus.Level {
@@ -16,7 +16,7 @@ func (*testHook) Levels() []logrus.Level {
 
 func (h *testHook) Fire(e *logrus.Entry) error {
 	h.lastError = e.Data["error"].(error)
-	n, ok := e.Data["notification"].(*events.Notification)
+	n, ok := e.Data["notification"].(*event.Notification)
 	if ok {
 		h.lastNotification = n
 	} else {

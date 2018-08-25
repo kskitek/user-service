@@ -11,7 +11,7 @@ type HttpError struct {
 }
 
 type ApiError struct {
-	Message    string `json:"message,omitempty"`
+	Message    string `json:"event,omitempty"`
 	StatusCode int    `json:"statusCode,omitempty"`
 }
 

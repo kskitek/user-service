@@ -3,26 +3,16 @@ package user
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/kskitek/arecar/user-service/events"
-	"github.com/sirupsen/logrus"
+	"gitlab.com/kskitek/arecar/user-service/event"
+	"gitlab.com/kskitek/arecar/user-service/event/mem"
+	"time"
 )
 
 func newOut() Service {
 	return &crud{
 		dao:      NewMockDao(),
-		notifier: events.NewInMemNotifier(),
+		notifier: mem.NewNotifier(),
 	}
-}
-
-func newOutPlus() (Service, Dao, events.Notifier) {
-	d := NewMockDao()
-	n := events.NewInMemNotifier()
-	c := &crud{
-		dao:      d,
-		notifier: n,
-	}
-
-	return c, d, n
 }
 
 func Test_GetUser_EmptyId_Error(t *testing.T) {
@@ -157,73 +147,87 @@ func Test_Get_UserHasPassword_ReturnedPasswordIsEmpty(t *testing.T) {
 	assert.Equal(t, "", user.Password)
 }
 
+func prepareNotificationTest(topic string) (Service, chan event.Notification) {
+	d := NewMockDao()
+	n := mem.NewNotifier()
+	out := &crud{
+		dao:      d,
+		notifier: n,
+	}
+	c := make(chan event.Notification)
+	f := func(n event.Notification) {
+		c <- n
+	}
+	n.AddListener(topic, f)
+	return out, c
+}
+
 func Test_Add_OkUser_Notifies(t *testing.T) {
-	out, _, notif := newOutPlus()
-	notifier := notif.(*events.MemNotifier)
+	out, c := prepareNotificationTest(CrudBaseTopic + ".add")
 	user := UserOk()
 
 	userAdded, err := out.Add(user)
+	notification := waitForNotification(c)
 
 	assert.Nil(t, err)
-
-	assert.NotEmpty(t, notifier.Events)
-	lastEvent := notifier.Events[0]
-	topic := notifier.Topics[0]
-	assert.Equal(t, userAdded, lastEvent.Payload)
-	assert.Equal(t, "create", lastEvent.Event)
-	assert.Equal(t, CrudTopic, topic)
+	assert.NotEmpty(t, notification)
+	assert.Equal(t, userAdded, notification.Payload)
 }
 
-// TODO now I'm lost in mocks.. restructure/split/rename
+func waitForNotification(c chan event.Notification) (notification event.Notification) {
+	select {
+	case notification = <-c:
+		return
+	case <-time.NewTimer(time.Second).C:
+		return
+	}
+}
+
 func Test_Add_NotifierFails_ErrorIsLogged(t *testing.T) {
-	notif := &mockNotifier{}
-	out := newOut().(*crud)
-	out.notifier = notif
-	hook := &testHook{}
-	logrus.AddHook(hook)
-	user := UserOk()
-
-	newUser, err := out.Add(user)
-	n := &events.Notification{Payload: newUser, Event: "create"}
-
-	assert.Nil(t, err)
-
-	assert.Equal(t, notifierMockError, hook.lastError)
-	assert.Equal(t, n, hook.lastNotification)
+	//notif := &mockNotifier{}
+	//out := newOut().(*crud)
+	//out.notifier = notif
+	//hook := &testHook{}
+	//logrus.AddHook(hook)
+	//user := UserOk()
+	//
+	//newUser, err := out.Add(user)
+	//n := &event.Notification{Payload: newUser, Event: "create"}
+	//
+	//assert.Nil(t, err)
+	//
+	//assert.Equal(t, notifierMockError, hook.lastError)
+	//assert.Equal(t, n, hook.lastNotification)
 }
 
 func Test_Delete_OkUser_Notifies(t *testing.T) {
-	out, _, notif := newOutPlus()
-	notifier := notif.(*events.MemNotifier)
+	out, c := prepareNotificationTest(CrudBaseTopic + ".delete")
 	user := UserOk()
 
 	_, err := out.Add(user)
+	waitForNotification(c)
 	err = out.Delete(UserOkId)
+	deleteNotification := waitForNotification(c)
 
 	assert.Nil(t, err)
-
-	assert.NotEmpty(t, notifier.Events)
-	lastEvent := notifier.Events[1]
-	topic := notifier.Topics[1]
-	assert.Equal(t, UserOkId, lastEvent.Payload)
-	assert.Equal(t, "delete", lastEvent.Event)
-	assert.Equal(t, CrudTopic, topic)
+	assert.NotEmpty(t, deleteNotification)
+	assert.Equal(t, UserOkId, deleteNotification.Payload)
 }
 
 func Test_Delete_NotifierFails_ErrorIsLogger(t *testing.T) {
-	notif := &mockNotifier{}
-	out := newOut().(*crud)
-	out.notifier = notif
-	hook := &testHook{}
-	logrus.AddHook(hook)
-	user := UserOk()
-
-	_, err := out.Add(user)
-	err = out.Delete(UserOkId)
-	n := &events.Notification{Payload: UserOkId, Event: "delete"}
-
-	assert.Nil(t, err)
-
-	assert.Equal(t, notifierMockError, hook.lastError)
-	assert.Equal(t, n, hook.lastNotification)
+	//notif := &mockNotifier{}
+	//out := newOut().(*crud)
+	//out.notifier = notif
+	//hook := &testHook{}
+	//logrus.AddHook(hook)
+	//user := UserOk()
+	//
+	//_, err := out.Add(user)
+	//err = out.Delete(UserOkId)
+	//n := &event.Notification{Payload: UserOkId, Event: "delete"}
+	//
+	//assert.Nil(t, err)
+	//
+	//assert.Equal(t, notifierMockError, hook.lastError)
+	//assert.Equal(t, n, hook.lastNotification)
 }
