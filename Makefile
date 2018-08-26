@@ -23,7 +23,7 @@ get-flyway:
 get-deps: get-flyway
 	go get -t ./...
 
-verify:
+verify: build
 	go vet ./...
 
 ## test: tests go service
@@ -35,7 +35,7 @@ test-pre-it-docker:
 	sleep 5
 
 ## test-pre-it: sets up integration tests environment (based on docker-compose-it.yaml)
-test-pre-it: clean-test-it test-pre-it-docker flyway-migrate
+test-pre-it: clean-test-it test-pre-it-docker migrate
 
 ## test-it: integration tests
 test-it: test test-pre-it
@@ -76,10 +76,10 @@ clean-test-it:
 	docker stop $(SVC_NAME)_pg ; echo ""
 	docker container rm $(SVC_NAME)_pg ; echo ""
 
-## clean: cleans service binary files
+## clean: cleans service binary files and integration tests environment
 clean: clean-test-it
 	rm $(SVC_NAME); rm $(SVC_NAME)_linux ; echo ""
 
 help: Makefile
-	@echo " Choose a command run in "$(PROJECTNAME)":"
+	@echo " Choose a command run in \033[32m"$(SVC_NAME)"\033[0m:"
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
