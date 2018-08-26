@@ -2,9 +2,15 @@ package auth
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/http_boundary"
 	"github.com/kskitek/user-service/user"
+)
+
+const (
+	AuthTopic = "user-service.v1.auth"
 )
 
 type Service interface {
@@ -14,6 +20,7 @@ type Service interface {
 type service struct {
 	userDao       user.Dao
 	authenticator Authenticator
+	notifier      event.Notifier
 }
 
 func (a *service) Login(name string, password string) (string, *http_boundary.ApiError) {
@@ -29,5 +36,7 @@ func (a *service) Login(name string, password string) (string, *http_boundary.Ap
 	if err != nil {
 		return "", &http_boundary.ApiError{Message: err.Error(), StatusCode: http.StatusInternalServerError}
 	}
+	n := event.Notification{When: time.Now(), Token: token, Payload: name}
+	a.notifier.Notify(AuthTopic+".login", n)
 	return token, nil
 }
