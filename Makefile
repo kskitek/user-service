@@ -2,7 +2,7 @@
 
 SVC_NAME = user-service
 # VERSION = `git rev-parse --short HEAD`
-VERSION = 0.0.1
+VERSION = 0.10.0
 
 DOCKER_REG = kskitek
 DOCKER_BASE_IMAGE = $(DOCKER_REG)/$(SVC_NAME):$(VERSION)

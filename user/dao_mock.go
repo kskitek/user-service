@@ -1,10 +1,10 @@
 package user
 
 import (
+	"fmt"
 	"strconv"
 	"sync/atomic"
 	"time"
-	"fmt"
 )
 
 type InMemDao struct {

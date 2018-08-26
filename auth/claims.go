@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"github.com/dgrijalva/jwt-go"
-	"time"
 	"fmt"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type authClaims struct {

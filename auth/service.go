@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
 	"net/http"
-	"gitlab.com/kskitek/arecar/user-service/user"
+
+	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/user"
 )
 
 type Service interface {

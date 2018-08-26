@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"gitlab.com/kskitek/arecar/user-service/user"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/user"
 )
 
 func NewHandler() http_boundary.Handler {

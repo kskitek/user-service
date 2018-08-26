@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"time"
-	"github.com/dgrijalva/jwt-go"
 	"fmt"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 // Implementations are responsible for providing authentication tokens and verifying tokens from user.

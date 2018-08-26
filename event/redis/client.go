@@ -3,7 +3,7 @@ package redis
 import (
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/kskitek/arecar/user-service/event"
+	"github.com/kskitek/user-service/event"
 )
 
 func NewNotifier() (event.Notifier, error) {

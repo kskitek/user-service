@@ -1,9 +1,9 @@
 package user
 
 import (
-	"time"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 var testSuffix = strconv.FormatInt(time.Now().Unix(), 10)

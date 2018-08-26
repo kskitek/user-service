@@ -1,6 +1,6 @@
 package auth
 
-import "gitlab.com/kskitek/arecar/user-service/http_boundary"
+import "github.com/kskitek/user-service/http_boundary"
 
 func (u *handler) Routes() []*http_boundary.Route {
 	return []*http_boundary.Route{

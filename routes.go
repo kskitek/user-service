@@ -1,9 +1,9 @@
 package main
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"gitlab.com/kskitek/arecar/user-service/user"
-	"gitlab.com/kskitek/arecar/user-service/auth"
+	"github.com/kskitek/user-service/auth"
+	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/user"
 )
 
 var handlers = []http_boundary.Handler{

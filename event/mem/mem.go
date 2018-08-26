@@ -1,7 +1,7 @@
 package mem
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/event"
+	"github.com/kskitek/user-service/event"
 	"github.com/sirupsen/logrus"
 )
 

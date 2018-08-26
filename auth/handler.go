@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"net/http"
 	"encoding/json"
-	"gitlab.com/kskitek/arecar/user-service/user"
+	"net/http"
+
+	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/user"
 )
 
 type handler struct {

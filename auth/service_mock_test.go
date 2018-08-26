@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/user"
 	"fmt"
 	"time"
+
+	"github.com/kskitek/user-service/user"
 )
 
 var UserErrorName = "UserErrorName"

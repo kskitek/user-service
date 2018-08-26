@@ -1,8 +1,8 @@
 package user
 
 import (
+	"github.com/kskitek/user-service/event"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/kskitek/arecar/user-service/event"
 )
 
 type testHook struct {

@@ -4,7 +4,7 @@ package redis
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/kskitek/arecar/user-service/event"
+	"github.com/kskitek/user-service/event"
 	"testing"
 	"time"
 )

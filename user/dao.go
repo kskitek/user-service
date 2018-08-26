@@ -1,13 +1,14 @@
 package user
 
 import (
+	"database/sql"
+	"fmt"
+	"os"
 	"strconv"
 	"time"
-	"fmt"
+
 	_ "github.com/lib/pq"
-	"database/sql"
 	"github.com/sirupsen/logrus"
-	"os"
 )
 
 const (

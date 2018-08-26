@@ -1,11 +1,12 @@
 package user
 
 import (
-	"time"
-	"net/http"
 	"fmt"
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"gitlab.com/kskitek/arecar/user-service/event"
+	"net/http"
+	"time"
+
+	"github.com/kskitek/user-service/event"
+	"github.com/kskitek/user-service/http_boundary"
 	"github.com/sirupsen/logrus"
 )
 

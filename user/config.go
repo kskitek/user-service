@@ -1,6 +1,6 @@
 package user
 
-import "gitlab.com/kskitek/arecar/user-service/http_boundary"
+import "github.com/kskitek/user-service/http_boundary"
 
 func NewHandler() http_boundary.Handler {
 	return &handler{

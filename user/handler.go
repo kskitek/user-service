@@ -1,12 +1,13 @@
 package user
 
 import (
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"net/http"
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"strconv"
 	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/kskitek/user-service/http_boundary"
 )
 
 type handler struct {

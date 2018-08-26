@@ -1,11 +1,12 @@
 package user
 
 import (
-	"github.com/stretchr/testify/assert"
-	"gitlab.com/kskitek/arecar/user-service/event"
-	"gitlab.com/kskitek/arecar/user-service/event/mem"
 	"testing"
 	"time"
+
+	"github.com/kskitek/user-service/event"
+	"github.com/kskitek/user-service/event/mem"
+	"github.com/stretchr/testify/assert"
 )
 
 func newOut() Service {

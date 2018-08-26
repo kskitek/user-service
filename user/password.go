@@ -1,13 +1,12 @@
 package user
 
 import (
-	"fmt"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 )
 
 type Password interface {
-
 }
 
 func hashPassword(pwd string) (string, error) {

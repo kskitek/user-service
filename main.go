@@ -2,9 +2,10 @@ package main
 
 import (
 	"net/http"
-	"gitlab.com/kskitek/arecar/user-service/http_boundary"
-	"github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/kskitek/user-service/http_boundary"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
