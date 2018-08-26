@@ -8,8 +8,8 @@ services:
       config/user-service.env
     links:
     - postgres
-#    depends_on:
-#    - flyway
+  #    depends_on:
+  #    - flyway
 
   postgres:
     image: postgres:10.5-alpine
@@ -17,12 +17,19 @@ services:
     - "5432:5432"
     env_file:
       config/postgres.env
-  #    volumes:
-  #    - a:a
+    #      volumes:
+    #      - a:a
 
-#  flyway:
-#    image: kskitek/user-service-flyway:0.0.1
-#    depends_on:
-#    - postgres
-#    links:
-#    - postgres
+    #  flyway:
+    #    image: kskitek/user-service-flyway:0.0.1
+    #    depends_on:
+    #    - postgres
+    #    links:
+    #    - postgres
+
+  redis:
+    image: redis:5.0-rc4-alpine
+    ports:
+    - "6379:6379"
+    # volumes:
+

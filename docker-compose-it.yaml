@@ -1,0 +1,17 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:10.5-alpine
+    ports:
+    - "5432:5432"
+    env_file:
+      config/postgres.env
+    #      volumes:
+    #      - a:a
+
+  redis:
+    image: redis:5.0-rc4-alpine
+    ports:
+    - "6379:6379"
+    # volumes:
+

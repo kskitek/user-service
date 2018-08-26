@@ -24,9 +24,7 @@ test: verify
 	go test -race ./...
 
 test-pre-it-docker:
-	docker run -d --name=$(SVC_NAME)_pg \
-	--env POSTGRES_PASSWORD=verySecretPassword --env POSTGRES_USER=user-service --env POSTGRES_DB=user-service \
-	-p 5432:5432 postgres:10.5-alpine
+	docker-compose -f docker-compose-it.yaml start
 	sleep 5
 
 test-pre-it: clean-test-it test-pre-it-docker flyway-migrate
