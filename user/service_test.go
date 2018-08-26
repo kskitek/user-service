@@ -1,17 +1,18 @@
 package user
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/kskitek/arecar/user-service/event"
 	"gitlab.com/kskitek/arecar/user-service/event/mem"
+	"testing"
 	"time"
 )
 
 func newOut() Service {
+	notifier := mem.NewNotifier()
 	return &crud{
 		dao:      NewMockDao(),
-		notifier: mem.NewNotifier(),
+		notifier: notifier,
 	}
 }
 
