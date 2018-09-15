@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/kskitek/user-service/event"
-	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/server"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,9 +23,16 @@ type User struct {
 }
 
 type Service interface {
-	Get(int64) (*User, *http_boundary.ApiError)
-	Add(*User) (*User, *http_boundary.ApiError)
-	Delete(int64) *http_boundary.ApiError
+	Get(int64) (*User, *server.ApiError)
+	Add(*User) (*User, *server.ApiError)
+	Delete(int64) *server.ApiError
+}
+
+func NewService(dao Dao, notifier event.Notifier) Service {
+	return &crud{
+		dao:      dao,
+		notifier: notifier,
+	}
 }
 
 type crud struct {
@@ -33,32 +40,32 @@ type crud struct {
 	notifier event.Notifier
 }
 
-func (uc *crud) Get(id int64) (*User, *http_boundary.ApiError) {
+func (uc *crud) Get(id int64) (*User, *server.ApiError) {
 	if id <= 0 {
-		return nil, &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
+		return nil, &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
 	user, err := uc.dao.GetById(id)
 	if err != nil {
-		return nil, &http_boundary.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
+		return nil, &server.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if user == nil {
-		return nil, &http_boundary.ApiError{Message: "User not found", StatusCode: http.StatusNotFound}
+		return nil, &server.ApiError{Message: "User not found", StatusCode: http.StatusNotFound}
 	}
 
 	user.Password = ""
 	return user, nil
 }
 
-func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
+func (uc *crud) Add(user *User) (*User, *server.ApiError) {
 	if user == nil {
-		return nil, &http_boundary.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
+		return nil, &server.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
 	}
 	exists, err := uc.dao.Exists(user)
 	if err != nil {
-		return nil, &http_boundary.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
+		return nil, &server.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if exists {
-		return nil, &http_boundary.ApiError{Message: "User already exists.", StatusCode: http.StatusConflict}
+		return nil, &server.ApiError{Message: "User already exists.", StatusCode: http.StatusConflict}
 	}
 
 	apiErr := validateAddUserPayload(user)
@@ -68,7 +75,7 @@ func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 	newUser, err := uc.dao.Add(user)
 	if err != nil {
 		fmt.Println(err)
-		return nil, &http_boundary.ApiError{Message: "Cannot add user", StatusCode: http.StatusUnprocessableEntity}
+		return nil, &server.ApiError{Message: "Cannot add user", StatusCode: http.StatusUnprocessableEntity}
 	}
 
 	newUser.Password = ""
@@ -80,13 +87,13 @@ func (uc *crud) Add(user *User) (*User, *http_boundary.ApiError) {
 	return newUser, nil
 }
 
-func (uc *crud) Delete(id int64) *http_boundary.ApiError {
+func (uc *crud) Delete(id int64) *server.ApiError {
 	if id == 0 {
-		return &http_boundary.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
+		return &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
 	err := uc.dao.Delete(id)
 	if err != nil {
-		return &http_boundary.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
+		return &server.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	n := event.Notification{Payload: id}
 	err = uc.notifier.Notify(CrudBaseTopic+".delete", n)
@@ -97,15 +104,15 @@ func (uc *crud) Delete(id int64) *http_boundary.ApiError {
 	return nil
 }
 
-func validateAddUserPayload(user *User) *http_boundary.ApiError {
+func validateAddUserPayload(user *User) *server.ApiError {
 	if !validateEmail(user.Email) {
-		return &http_boundary.ApiError{Message: "Invalid email address", StatusCode: http.StatusUnprocessableEntity}
+		return &server.ApiError{Message: "Invalid email address", StatusCode: http.StatusUnprocessableEntity}
 	}
 	if user.Name == "" {
-		return &http_boundary.ApiError{Message: "Name cannot be empty", StatusCode: http.StatusUnprocessableEntity}
+		return &server.ApiError{Message: "Name cannot be empty", StatusCode: http.StatusUnprocessableEntity}
 	}
 	if user.Password == "" {
-		return &http_boundary.ApiError{Message: "Password cannot be empty", StatusCode: http.StatusUnprocessableEntity}
+		return &server.ApiError{Message: "Password cannot be empty", StatusCode: http.StatusUnprocessableEntity}
 	}
 
 	return nil

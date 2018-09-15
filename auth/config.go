@@ -2,20 +2,13 @@ package auth
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/kskitek/user-service/http_boundary"
 	"github.com/kskitek/user-service/user"
 )
 
-func NewHandler() http_boundary.Handler {
-	return &handler{
-		s: NewService(),
-	}
-}
-
-func NewService() Service {
+func NewService(dao user.Dao) Service {
 	return &service{
 		authenticator: NewAuthenticator(),
-		userDao:       user.NewDao(),
+		userDao:       dao,
 	}
 }
 

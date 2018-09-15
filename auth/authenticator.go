@@ -13,13 +13,13 @@ type Authenticator interface {
 	//
 	// When expiation time is null it will be set with default value.
 	GetToken(userId string, expirationTime *time.Time) (string, error)
-	Parse(string) (*AuthResult, error)
+	Parse(string) (*Result, error)
 }
 
 // Result of parsing the authentication token
 //
 // This struct might be just in/out struct for GetToken/Parse
-type AuthResult struct {
+type Result struct {
 	UserId string
 }
 
@@ -49,7 +49,7 @@ func (a *jwtAuthenticator) GetToken(userId string, expirationTime *time.Time) (s
 	return token.SignedString(key)
 }
 
-func (a *jwtAuthenticator) Parse(tokenString string) (*AuthResult, error) {
+func (a *jwtAuthenticator) Parse(tokenString string) (*Result, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &authClaims{}, a.jwtKeyFunc)
 	if err != nil {
 		return nil, err
@@ -80,8 +80,8 @@ func fixExpTimeWithDefault(expTime *time.Time) time.Time {
 	}
 }
 
-func (c *authClaims) toAuthResult() *AuthResult {
-	return &AuthResult{
+func (c *authClaims) toAuthResult() *Result {
+	return &Result{
 		UserId: c.User,
 	}
 }

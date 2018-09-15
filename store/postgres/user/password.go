@@ -6,9 +6,6 @@ import (
 	"fmt"
 )
 
-type Password interface {
-}
-
 func hashPassword(pwd string) (string, error) {
 	h := sha256.New()
 	_, err := h.Write([]byte(pwd))

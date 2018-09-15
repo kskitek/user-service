@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kskitek/user-service/user"
 	"github.com/stretchr/testify/assert"
 )
 
-var out = NewDao()
+var out = NewPgDao()
 
 func Test_Add_OkUser_ReturnsUserWithNewId(t *testing.T) {
 	user1, err1 := out.Add(UserOk())
@@ -24,18 +25,18 @@ func Test_Add_OkUser_ReturnsUserWithNewId(t *testing.T) {
 }
 
 func Test_Add_TheSameUserTwoTimes_Error(t *testing.T) {
-	user := getTestUser(t)
-	_, err1 := out.Add(user)
-	_, err2 := out.Add(user)
+	u := getTestUser(t)
+	_, err1 := out.Add(u)
+	_, err2 := out.Add(u)
 
 	assert.Nil(t, err1)
 	assert.NotNil(t, err2)
 }
 
 func Test_AddAndGet_ReturnsTheUser(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	newUser, err := out.Add(user)
+	newUser, err := out.Add(u)
 	assert.Nil(t, err)
 	newId, _ := strconv.ParseInt(newUser.Id, 10, 64)
 
@@ -46,21 +47,21 @@ func Test_AddAndGet_ReturnsTheUser(t *testing.T) {
 }
 
 func Test_Add_GetByNameReturnsTheUser(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	newUser, err := out.Add(user)
+	newUser, err := out.Add(u)
 	assert.Nil(t, err)
 
-	userByName, err := out.GetByName(user.Name)
+	userByName, err := out.GetByName(u.Name)
 	assert.Nil(t, err)
 
 	assert.Equal(t, newUser, userByName)
 }
 
 func Test_Add_ExistsReturnsTrue(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	newUser, err := out.Add(user)
+	newUser, err := out.Add(u)
 	assert.Nil(t, err)
 
 	userByName, err := out.Exists(newUser)
@@ -70,9 +71,9 @@ func Test_Add_ExistsReturnsTrue(t *testing.T) {
 }
 
 func Test_AfterDelete_CannotGetUser(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	newUser, err := out.Add(user)
+	newUser, err := out.Add(u)
 	assert.Nil(t, err)
 
 	newId, _ := strconv.ParseInt(newUser.Id, 10, 64)
@@ -87,52 +88,52 @@ func Test_AfterDelete_CannotGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, userById)
 
-	userByName, err := out.GetByName(user.Name)
+	userByName, err := out.GetByName(u.Name)
 	assert.Nil(t, err)
 	assert.Nil(t, userByName)
 }
 
 func Test_MatchPassword_UserNotExists_False(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	matching, err := out.MatchPassword(user.Name, user.Password)
+	matching, err := out.MatchPassword(u.Name, u.Password)
 	assert.Nil(t, err)
 
 	assert.False(t, matching)
 }
 
 func Test_MatchPassword_UserExists_PasswordIsCompared(t *testing.T) {
-	user := getTestUser(t)
+	u := getTestUser(t)
 
-	out.Add(user)
-	matching, err := out.MatchPassword(user.Name, "wrongPwd")
+	out.Add(u)
+	matching, err := out.MatchPassword(u.Name, "wrongPwd")
 	assert.Nil(t, err)
 	assert.False(t, matching)
 
-	matching, err = out.MatchPassword(user.Name, user.Password)
+	matching, err = out.MatchPassword(u.Name, u.Password)
 	assert.Nil(t, err)
 	assert.True(t, matching)
 }
 
 func Test_Add_Password_PasswordIsSavedHashed(t *testing.T) {
-	user := getTestUser(t)
-	user.Password = "pwd"
+	u := getTestUser(t)
+	u.Password = "pwd"
 	pwdHash := "oRWenfNnDVSdBFJFMmKfVHfOt97sm0XkfowAlQbsssg="
-	origPwd := user.Password
+	origPwd := u.Password
 
-	out.Add(user)
-	matching, err := out.MatchPassword(user.Name, origPwd)
+	out.Add(u)
+	matching, err := out.MatchPassword(u.Name, origPwd)
 	assert.Nil(t, err)
 	assert.False(t, matching)
 
-	matching, err = out.MatchPassword(user.Name, pwdHash)
+	matching, err = out.MatchPassword(u.Name, pwdHash)
 	assert.Nil(t, err)
 	assert.True(t, matching)
 }
 
-func getTestUser(t *testing.T) *User {
+func getTestUser(t *testing.T) *user.User {
 	regT := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
-	return &User{
+	return &user.User{
 		Name:             t.Name() + "_" + testSuffix,
 		Email:            t.Name() + "_" + testSuffix + "@gmail.com",
 		Password:         "pwd",

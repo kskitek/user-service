@@ -34,7 +34,7 @@ func (a *auth) GetToken(userId string, expirationTime *time.Time) (string, error
 	return UserOkToken, nil
 }
 
-func (auth) Parse(string) (*AuthResult, error) {
+func (auth) Parse(string) (*Result, error) {
 	panic("implement me")
 }
 

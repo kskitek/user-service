@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/kskitek/user-service/event"
-	"github.com/kskitek/user-service/http_boundary"
+	"github.com/kskitek/user-service/server"
 	"github.com/kskitek/user-service/user"
 )
 
@@ -14,7 +14,7 @@ const (
 )
 
 type Service interface {
-	Login(string, string) (string, *http_boundary.ApiError)
+	Login(string, string) (string, *server.ApiError)
 }
 
 type service struct {
@@ -23,18 +23,18 @@ type service struct {
 	notifier      event.Notifier
 }
 
-func (a *service) Login(name string, password string) (string, *http_boundary.ApiError) {
+func (a *service) Login(name string, password string) (string, *server.ApiError) {
 	matching, err := a.userDao.MatchPassword(name, password)
 	if err != nil {
-		return "", &http_boundary.ApiError{Message: "Error when checking password: " + err.Error(), StatusCode: http.StatusInternalServerError}
+		return "", &server.ApiError{Message: "Error when checking password: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	if !matching {
-		return "", &http_boundary.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
+		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
 	}
 
 	token, err := a.authenticator.GetToken(name, nil)
 	if err != nil {
-		return "", &http_boundary.ApiError{Message: err.Error(), StatusCode: http.StatusInternalServerError}
+		return "", &server.ApiError{Message: err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	n := event.Notification{When: time.Now(), Token: token, Payload: name}
 	a.notifier.Notify(AuthTopic+".login", n)

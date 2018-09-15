@@ -23,7 +23,7 @@ get-flyway:
 get-deps: get-flyway
 	go get -t ./...
 
-verify: build
+verify:
 	go vet ./...
 
 ## test: tests go service
@@ -51,7 +51,7 @@ run:
 
 ## build-docker: builds docker image of the service
 build-docker: test build
-	env GOOS=linux go build -o $(SVC_NAME)_linux
+	env GOOS=linux go build -o $(SVC_NAME)_linux -ldflags "-s -w" && upx -6 $(SVC_NAME)_linux 
 	docker build -t $(DOCKER_BASE_IMAGE) .
 	docker build -t $(DOCKER_FLYWAY_IMAGE) -f Dockerfile-flyway .
 
