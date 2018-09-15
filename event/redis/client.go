@@ -2,8 +2,8 @@ package redis
 
 import (
 	"github.com/go-redis/redis"
-	"github.com/sirupsen/logrus"
 	"github.com/kskitek/user-service/event"
+	"github.com/sirupsen/logrus"
 )
 
 func NewNotifier() (event.Notifier, error) {

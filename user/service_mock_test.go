@@ -24,10 +24,6 @@ func UserOk() *User {
 	return newUser("-1", "User1_")
 }
 
-func UserOk2() *User {
-	return newUser("-1", "User2_")
-}
-
 var UserExistsId = int64(20)
 
 func UserExists() *User {

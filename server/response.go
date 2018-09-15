@@ -1,8 +1,9 @@
 package server
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,7 +27,10 @@ func Respond(responsePayload interface{}, selfHref string, okStatusCode int, w h
 		RespondWithError(httpErr, w)
 	} else {
 		w.WriteHeader(okStatusCode)
-		w.Write(bytes)
+		_, err := w.Write(bytes)
+		if err != nil {
+			logrus.WithError(err).Error("unable to write")
+		}
 	}
 }
 
@@ -36,11 +40,12 @@ func RespondWithError(err *HttpError, w http.ResponseWriter) {
 		bytes, jsonErr := json.Marshal(err)
 		if jsonErr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
 		} else {
 			w.WriteHeader(err.StatusCode)
-			w.Write(bytes)
-			return
+			_, err := w.Write(bytes)
+			if err != nil {
+				logrus.WithError(err).Error("unable to write")
+			}
 		}
 	}
 }

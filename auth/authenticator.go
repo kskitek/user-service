@@ -56,7 +56,7 @@ func (a *jwtAuthenticator) Parse(tokenString string) (*Result, error) {
 	}
 	claims, ok := token.Claims.(*authClaims)
 	if !ok {
-		return nil, fmt.Errorf("unkown token claims %v", token.Claims)
+		return nil, fmt.Errorf("unknown token claims %v", token.Claims)
 	}
 	if err = claims.Valid(); err != nil {
 		return nil, err

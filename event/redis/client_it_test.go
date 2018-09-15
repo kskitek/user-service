@@ -3,10 +3,11 @@
 package redis
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/kskitek/user-service/event"
 	"testing"
 	"time"
+
+	"github.com/kskitek/user-service/event"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewNotifierIsCreatedWithoutError(t *testing.T) {

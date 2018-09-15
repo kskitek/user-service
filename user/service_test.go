@@ -206,9 +206,9 @@ func Test_Delete_OkUser_Notifies(t *testing.T) {
 	out, c := prepareNotificationTest(CrudBaseTopic + ".delete")
 	user := UserOk()
 
-	_, err := out.Add(user)
+	out.Add(user)
 	waitForNotification(c)
-	err = out.Delete(UserOkId)
+	err := out.Delete(UserOkId)
 	deleteNotification := waitForNotification(c)
 
 	assert.Nil(t, err)

@@ -7,6 +7,7 @@ import (
 	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/server"
 	"github.com/kskitek/user-service/user"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -37,6 +38,9 @@ func (a *service) Login(name string, password string) (string, *server.ApiError)
 		return "", &server.ApiError{Message: err.Error(), StatusCode: http.StatusInternalServerError}
 	}
 	n := event.Notification{When: time.Now(), Token: token, Payload: name}
-	a.notifier.Notify(AuthTopic+".login", n)
+	err = a.notifier.Notify(AuthTopic+".login", n)
+	if err != nil {
+		logrus.WithError(err).Error("unable to notify about login")
+	}
 	return token, nil
 }
