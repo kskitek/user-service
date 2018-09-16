@@ -41,7 +41,7 @@ func Test_Login_ErrorInAuthenticator_Error(t *testing.T) {
 }
 
 func Test_Login_LoggsIn_Notifies(t *testing.T) {
-	c := prepareNotificationTest(AuthTopic + ".login")
+	c := prepareNotificationTest(t, AuthTopic+".login")
 
 	token, _ := out.Login(UserOkName, UserOkPassword)
 	n := waitForNotification(t, c)
@@ -51,12 +51,13 @@ func Test_Login_LoggsIn_Notifies(t *testing.T) {
 	assert.NotNil(t, n.When)
 }
 
-func prepareNotificationTest(topic string) chan event.Notification {
+func prepareNotificationTest(t *testing.T, topic string) chan event.Notification {
 	c := make(chan event.Notification)
 	f := func(n event.Notification) {
 		c <- n
 	}
-	out.notifier.AddListener(topic, f)
+	err := out.notifier.AddListener(topic, f)
+	assert.NoError(t, err)
 	return c
 }
 

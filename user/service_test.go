@@ -149,7 +149,7 @@ func Test_Get_UserHasPassword_ReturnedPasswordIsEmpty(t *testing.T) {
 	assert.Equal(t, "", user.Password)
 }
 
-func prepareNotificationTest(topic string) (Service, chan event.Notification) {
+func prepareNotificationTest(t *testing.T, topic string) (Service, chan event.Notification) {
 	d := NewMockDao()
 	n := mem.NewNotifier()
 	out := &crud{
@@ -160,12 +160,13 @@ func prepareNotificationTest(topic string) (Service, chan event.Notification) {
 	f := func(n event.Notification) {
 		c <- n
 	}
-	n.AddListener(topic, f)
+	err := n.AddListener(topic, f)
+	assert.NoError(t, err)
 	return out, c
 }
 
 func Test_Add_OkUser_Notifies(t *testing.T) {
-	out, c := prepareNotificationTest(CrudBaseTopic + ".add")
+	out, c := prepareNotificationTest(t, CrudBaseTopic + ".add")
 	user := UserOk()
 
 	userAdded, err := out.Add(user)
@@ -203,12 +204,14 @@ func Test_Add_NotifierFails_ErrorIsLogged(t *testing.T) {
 }
 
 func Test_Delete_OkUser_Notifies(t *testing.T) {
-	out, c := prepareNotificationTest(CrudBaseTopic + ".delete")
+	out, c := prepareNotificationTest(t, CrudBaseTopic + ".delete")
 	user := UserOk()
 
-	out.Add(user)
+	_, err := out.Add(user)
+	assert.Nil(t, err)
+
 	waitForNotification(c)
-	err := out.Delete(UserOkId)
+	err = out.Delete(UserOkId)
 	deleteNotification := waitForNotification(c)
 
 	assert.Nil(t, err)

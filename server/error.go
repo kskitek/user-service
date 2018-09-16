@@ -15,6 +15,6 @@ type ApiError struct {
 	StatusCode int    `json:"statusCode,omitempty"`
 }
 
-func (a ApiError) Error() string {
+func (a *ApiError) Error() string {
 	return fmt.Sprintf("HTTPErr: %d=%s", a.StatusCode, a.Message)
 }
