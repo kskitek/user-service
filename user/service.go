@@ -80,7 +80,7 @@ func (uc *crud) Add(ctx context.Context, user *User) (*User, *server.ApiError) {
 	}
 
 	newUser.Password = ""
-	n := event.Notification{CorrelationId: contextToString(ctx), Payload: newUser}
+	n := event.Notification{CorrelationId: contextToString(ctx), Payload: newUser, Event: "add"}
 	uc.notify(ctx, CrudBaseTopic+".add", n, tags)
 	return newUser, nil
 }
@@ -94,7 +94,7 @@ func (uc *crud) Delete(ctx context.Context, id int64) *server.ApiError {
 	if err != nil {
 		return err
 	}
-	n := event.Notification{CorrelationId: contextToString(ctx), Payload: id}
+	n := event.Notification{CorrelationId: contextToString(ctx), Payload: id, Event: "delete"}
 	uc.notify(ctx, CrudBaseTopic+".delete", n, tags)
 
 	return nil
@@ -123,6 +123,7 @@ func (uc *crud) add(ctx context.Context, user *User, tags tags) (*User, *server.
 }
 
 func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, tags tags) {
+	tags["notification"] = n.String()
 	defer setUpTraceWithTags(ctx, "notification", tags)()
 	err := uc.notifier.Notify(topic, n)
 	if err != nil {
@@ -131,6 +132,7 @@ func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, 
 			Error("error when notifying")
 	}
 }
+
 func (uc *crud) delete(ctx context.Context, id int64, tags tags) *server.ApiError {
 	defer setUpTraceWithTags(ctx, "dao", tags)()
 	err := uc.dao.Delete(id)
@@ -180,7 +182,7 @@ func contextToString(ctx context.Context) string {
 	if span == nil {
 		return ""
 	}
-	j, ok :=span.Context().(jaeger.SpanContext)
+	j, ok := span.Context().(jaeger.SpanContext)
 	if !ok {
 		return ""
 	}

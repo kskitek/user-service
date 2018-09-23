@@ -135,13 +135,3 @@ func setUpTrace(ctx context.Context, opName string) func() {
 		span.Finish()
 	}
 }
-
-func setUpTraceWithTags(ctx context.Context, opName string, tags map[string]string) func() {
-	span, _ := opentracing.StartSpanFromContext(ctx, opName)
-	for k, v := range tags {
-		span.SetTag(k, v)
-	}
-	return func() {
-		span.Finish()
-	}
-}

@@ -9,6 +9,7 @@ type Notification struct {
 	CorrelationId string      `json:"correlationId,omitempty"`
 	Token         string      `json:"token,omitempty"`
 	When          time.Time   `json:"time,omitempty"`
+	Event         string      `json:"event,omitempty"`
 	Payload       interface{} `json:"payload"`
 }
 
@@ -26,4 +27,12 @@ func (n Notification) MarshalBinary() ([]byte, error) {
 
 func (n *Notification) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, n)
+}
+
+func (n Notification) String() string {
+	bytes, err := n.MarshalBinary()
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }
