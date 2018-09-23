@@ -44,6 +44,18 @@ func (r *redisNotifier) AddListener(topic string, n event.Listener) error {
 	return nil
 }
 
+func (r *redisNotifier) AddListenerPattern(topicPattern string, n event.Listener) error {
+	pubSub := r.client.PSubscribe(topicPattern)
+	_, err := pubSub.Receive()
+	if err != nil {
+		return err
+	}
+	c := pubSub.Channel()
+	go channelListener(c, n, topicPattern)
+
+	return nil
+}
+
 func channelListener(c <-chan *redis.Message, l event.Listener, t string) {
 	for m := range c {
 		logrus.WithField("message", m).Debug("Notified")

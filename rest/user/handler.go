@@ -31,12 +31,12 @@ func (h *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
 
-	intId, parseErr := stringToId(id)
+	intId, parseErr := stringToId(&id)
 	if parseErr != nil {
 		httpErr := &server.HttpError{Href: &server.Link{Href: selfHref}, ApiError: parseErr}
 		server.RespondWithError(httpErr, w)
 	}
-	u, err := h.s.Get(intId)
+	u, err := h.s.Get(r.Context(), intId)
 
 	if err != nil {
 		httpErr := &server.HttpError{Href: &server.Link{Href: selfHref}, ApiError: err}
@@ -48,10 +48,10 @@ func (h *handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func stringToId(id string) (int64, *server.ApiError) {
-	intId, parseErr := strconv.ParseInt(id, 10, 64)
+func stringToId(id *string) (int64, *server.ApiError) {
+	intId, parseErr := strconv.ParseInt(*id, 10, 64)
 	if parseErr != nil {
-		return 0, &server.ApiError{Message: fmt.Sprintf("cannot parse '%s' as user id", id), StatusCode: http.StatusBadRequest}
+		return 0, &server.ApiError{Message: fmt.Sprintf("cannot parse '%d' as user id", id), StatusCode: http.StatusBadRequest}
 	}
 	return intId, nil
 }
@@ -65,7 +65,7 @@ func (h *handler) handleUserAdd(w http.ResponseWriter, r *http.Request) {
 	if decodeErr != nil {
 		err = &server.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		u, err = h.s.Add(u)
+		u, err = h.s.Add(r.Context(), u)
 	}
 
 	if err != nil {
@@ -84,12 +84,12 @@ func (h *handler) handleUserDelete(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	selfHref := r.URL.Path
 
-	intId, parseErr := stringToId(id)
+	intId, parseErr := stringToId(&id)
 	if parseErr != nil {
 		httpErr := &server.HttpError{Href: &server.Link{Href: selfHref}, ApiError: parseErr}
 		server.RespondWithError(httpErr, w)
 	}
-	err = h.s.Delete(intId)
+	err = h.s.Delete(r.Context(), intId)
 
 	if err != nil {
 		httpErr := &server.HttpError{Href: &server.Link{Href: selfHref}, ApiError: err}

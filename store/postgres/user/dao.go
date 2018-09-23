@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/kskitek/user-service/user"
 	_ "github.com/lib/pq"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,17 +36,18 @@ type pgDao struct {
 	db *sql.DB
 }
 
-func (d *pgDao) GetById(id int64) (*user.User, error) {
-	return d.getUser(fmt.Sprintf(getByPattern, "id"), id)
+func (d *pgDao) GetById(ctx context.Context, id int64) (*user.User, error) {
+	return d.getUser(ctx, fmt.Sprintf(getByPattern, "id"), id)
 }
 
 func (d *pgDao) GetByName(name string) (*user.User, error) {
-	return d.getUser(fmt.Sprintf(getByPattern, "name"), name)
+	return d.getUser(context.Background(), fmt.Sprintf(getByPattern, "name"), name)
 }
 
-func (d *pgDao) getUser(query string, params ...interface{}) (*user.User, error) {
+func (d *pgDao) getUser(ctx context.Context, query string, params ...interface{}) (*user.User, error) {
+	defer setUpTrace(ctx, "postgres")()
 	u := &user.User{}
-	err := d.db.QueryRow(query, params...).
+	err := d.db.QueryRowContext(ctx, query, params...).
 		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.RegistrationDate)
 	u.RegistrationDate = u.RegistrationDate.In(time.UTC)
 
@@ -59,7 +62,7 @@ func (d *pgDao) getUser(query string, params ...interface{}) (*user.User, error)
 }
 
 func (d *pgDao) MatchPassword(userName string, password string) (bool, error) {
-	u, err := d.getUser("SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, password)
+	u, err := d.getUser(context.Background(), "SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, password)
 	return u != nil, err
 }
 
@@ -123,5 +126,22 @@ func getDb(connStr string, timeout time.Duration) *sql.DB {
 			logrus.Info("got connection to database")
 			return db
 		}
+	}
+}
+
+func setUpTrace(ctx context.Context, opName string) func() {
+	span, _ := opentracing.StartSpanFromContext(ctx, opName)
+	return func() {
+		span.Finish()
+	}
+}
+
+func setUpTraceWithTags(ctx context.Context, opName string, tags map[string]string) func() {
+	span, _ := opentracing.StartSpanFromContext(ctx, opName)
+	for k, v := range tags {
+		span.SetTag(k, v)
+	}
+	return func() {
+		span.Finish()
 	}
 }

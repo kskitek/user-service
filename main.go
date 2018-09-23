@@ -11,11 +11,14 @@ import (
 	"github.com/kskitek/user-service/server"
 	ustore "github.com/kskitek/user-service/store/postgres/user"
 	usersrv "github.com/kskitek/user-service/user"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"github.com/uber/jaeger-client-go/config"
 )
 
 func main() {
 	setupLogger()
+	setupTracer()
 
 	dao := ustore.NewPgDao()
 	server.Server.AddRoutes(userHandler(dao).Routes())
@@ -43,4 +46,23 @@ func userHandler(dao usersrv.Dao) server.Handler {
 func authHandler(dao usersrv.Dao) server.Handler {
 	service := authsrv.NewService(dao)
 	return auth.NewHandler(service)
+}
+
+func setupTracer() {
+	tracer, _, err := config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: false,
+		},
+		ServiceName: "user-service",
+	}.NewTracer()
+	if err != nil {
+		logrus.WithError(err).Error()
+	}
+	//tracer, _ := jaeger.NewTracer("user-service", jaeger.NewConstSampler(true), jaeger.NewInMemoryReporter())
+
+	opentracing.InitGlobalTracer(tracer)
 }

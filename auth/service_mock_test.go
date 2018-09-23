@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -38,7 +39,7 @@ func (auth) Parse(string) (*Result, error) {
 	panic("implement me")
 }
 
-func (mock) GetById(int64) (*user.User, error) {
+func (mock) GetById(context.Context, int64) (*user.User, error) {
 	panic("implement me")
 }
 

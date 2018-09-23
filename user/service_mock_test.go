@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -47,7 +48,7 @@ func NewMockDao() Dao {
 type MockDao struct {
 }
 
-func (d *MockDao) GetById(id int64) (*User, error) {
+func (d *MockDao) GetById(_ context.Context, id int64) (*User, error) {
 	if id == UserErrorId {
 		return nil, fmt.Errorf("test error")
 	}

@@ -6,15 +6,16 @@ import (
 )
 
 type Notification struct {
-	//CorrelationId string `json:"correlationId,omitempty"`
-	Token   string      `json:"token,omitempty"`
-	When    time.Time   `json:"time,omitempty"`
-	Payload interface{} `json:"payload"`
+	CorrelationId string      `json:"correlationId,omitempty"`
+	Token         string      `json:"token,omitempty"`
+	When          time.Time   `json:"time,omitempty"`
+	Payload       interface{} `json:"payload"`
 }
 
 type Notifier interface {
 	Notify(topic string, n Notification) error
 	AddListener(topic string, n Listener) error
+	AddListenerPattern(topicPattern string, n Listener) error
 }
 
 type Listener = func(Notification)
