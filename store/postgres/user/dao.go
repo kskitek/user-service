@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kskitek/user-service/tracing"
 	"github.com/kskitek/user-service/user"
 	_ "github.com/lib/pq"
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -45,10 +45,11 @@ func (d *pgDao) GetByName(name string) (*user.User, error) {
 }
 
 func (d *pgDao) getUser(ctx context.Context, query string, params ...interface{}) (*user.User, error) {
-	defer setUpTrace(ctx, "postgres")()
+	defer tracing.SetUpTrace(ctx, "postgres")()
 	u := &user.User{}
+	pwd := ""
 	err := d.db.QueryRowContext(ctx, query, params...).
-		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.RegistrationDate)
+		Scan(&u.Id, &u.Name, &u.Email, &pwd, &u.RegistrationDate)
 	u.RegistrationDate = u.RegistrationDate.In(time.UTC)
 
 	switch err {
@@ -62,7 +63,12 @@ func (d *pgDao) getUser(ctx context.Context, query string, params ...interface{}
 }
 
 func (d *pgDao) MatchPassword(userName string, password string) (bool, error) {
-	u, err := d.getUser(context.Background(), "SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, password)
+	pwd, err := hashPassword(password)
+	if err != nil {
+		logrus.WithError(err).Error("unable to hash password")
+		return false, err
+	}
+	u, err := d.getUser(context.Background(), "SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, pwd)
 	return u != nil, err
 }
 
@@ -126,12 +132,5 @@ func getDb(connStr string, timeout time.Duration) *sql.DB {
 			logrus.Info("got connection to database")
 			return db
 		}
-	}
-}
-
-func setUpTrace(ctx context.Context, opName string) func() {
-	span, _ := opentracing.StartSpanFromContext(ctx, opName)
-	return func() {
-		span.Finish()
 	}
 }

@@ -8,9 +8,8 @@ import (
 
 	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/server"
-	"github.com/opentracing/opentracing-go"
+	"github.com/kskitek/user-service/tracing"
 	"github.com/sirupsen/logrus"
-	"github.com/uber/jaeger-client-go"
 )
 
 const (
@@ -73,14 +72,14 @@ func (uc *crud) Add(ctx context.Context, user *User) (*User, *server.ApiError) {
 		return nil, apiErr
 	}
 
-	tags := tags{"op": "add"}
+	tags := tracing.Tags{"op": "add"}
 	newUser, err := uc.add(ctx, user, tags)
 	if err != nil {
 		return nil, err
 	}
 
 	newUser.Password = ""
-	n := event.Notification{CorrelationId: contextToString(ctx), Payload: newUser, Event: "add"}
+	n := event.Notification{CorrelationId: tracing.ContextToString(ctx), Payload: newUser, Event: "add"}
 	uc.notify(ctx, CrudBaseTopic+".add", n, tags)
 	return newUser, nil
 }
@@ -89,19 +88,19 @@ func (uc *crud) Delete(ctx context.Context, id int64) *server.ApiError {
 	if id == 0 {
 		return &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
-	tags := tags{"op": "delete"}
+	tags := tracing.Tags{"op": "delete"}
 	err := uc.delete(ctx, id, tags)
 	if err != nil {
 		return err
 	}
-	n := event.Notification{CorrelationId: contextToString(ctx), Payload: id, Event: "delete"}
+	n := event.Notification{CorrelationId: tracing.ContextToString(ctx), Payload: id, Event: "delete"}
 	uc.notify(ctx, CrudBaseTopic+".delete", n, tags)
 
 	return nil
 }
 
 func (uc *crud) checkIfExists(ctx context.Context, user *User) *server.ApiError {
-	defer setUpTraceWithTags(ctx, "dao", tags{"op": "exists"})()
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tracing.Tags{"op": "exists"})()
 	exists, err := uc.dao.Exists(user)
 	if err != nil {
 		return &server.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
@@ -112,8 +111,8 @@ func (uc *crud) checkIfExists(ctx context.Context, user *User) *server.ApiError 
 	return nil
 }
 
-func (uc *crud) add(ctx context.Context, user *User, tags tags) (*User, *server.ApiError) {
-	defer setUpTraceWithTags(ctx, "dao", tags)()
+func (uc *crud) add(ctx context.Context, user *User, tags tracing.Tags) (*User, *server.ApiError) {
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tags)()
 	newUser, err := uc.dao.Add(user)
 	if err != nil {
 		fmt.Println(err)
@@ -122,9 +121,9 @@ func (uc *crud) add(ctx context.Context, user *User, tags tags) (*User, *server.
 	return newUser, nil
 }
 
-func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, tags tags) {
+func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, tags tracing.Tags) {
 	tags["notification"] = n.String()
-	defer setUpTraceWithTags(ctx, "notification", tags)()
+	defer tracing.SetUpTraceWithTags(ctx, "notification", tags)()
 	err := uc.notifier.Notify(topic, n)
 	if err != nil {
 		logrus.WithError(err).
@@ -133,8 +132,8 @@ func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, 
 	}
 }
 
-func (uc *crud) delete(ctx context.Context, id int64, tags tags) *server.ApiError {
-	defer setUpTraceWithTags(ctx, "dao", tags)()
+func (uc *crud) delete(ctx context.Context, id int64, tags tracing.Tags) *server.ApiError {
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tags)()
 	err := uc.dao.Delete(id)
 	if err != nil {
 		return &server.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
@@ -163,28 +162,4 @@ func validateEmail(email string) bool {
 	} else {
 		return true
 	}
-}
-
-type tags map[string]string
-
-func setUpTraceWithTags(ctx context.Context, opName string, tags map[string]string) (deferFunc func()) {
-	span, _ := opentracing.StartSpanFromContext(ctx, opName)
-	for k, v := range tags {
-		span.SetTag(k, v)
-	}
-	return func() {
-		span.Finish()
-	}
-}
-
-func contextToString(ctx context.Context) string {
-	span := opentracing.SpanFromContext(ctx)
-	if span == nil {
-		return ""
-	}
-	j, ok := span.Context().(jaeger.SpanContext)
-	if !ok {
-		return ""
-	}
-	return j.String()
 }

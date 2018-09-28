@@ -5,6 +5,7 @@ import (
 	"time"
 
 	authsrv "github.com/kskitek/user-service/auth"
+	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/event/redis"
 	"github.com/kskitek/user-service/rest/auth"
 	"github.com/kskitek/user-service/rest/user"
@@ -21,8 +22,12 @@ func main() {
 	setupTracer()
 
 	dao := ustore.NewPgDao()
-	server.Server.AddRoutes(userHandler(dao).Routes())
-	server.Server.AddRoutes(authHandler(dao).Routes())
+	notifier, err := redis.NewNotifier()
+	if err != nil {
+		logrus.WithError(err).Fatal("unable to setup redis notifier")
+	}
+	server.Server.AddRoutes(userHandler(dao, notifier).Routes())
+	server.Server.AddRoutes(authHandler(dao, notifier).Routes())
 
 	logrus.WithField("port", ":8080").Info("Starting")
 	logrus.Fatal(http.ListenAndServe(":8080", server.Server.Handler()))
@@ -34,17 +39,13 @@ func setupLogger() {
 	logrus.SetFormatter(&logrus.TextFormatter{TimestampFormat: time.RFC3339})
 }
 
-func userHandler(dao usersrv.Dao) server.Handler {
-	notifier, err := redis.NewNotifier()
-	if err != nil {
-		logrus.WithError(err).Fatal("unable to setup user handler")
-	}
+func userHandler(dao usersrv.Dao, notifier event.Notifier) server.Handler {
 	service := usersrv.NewService(dao, notifier)
 	return user.NewHandler(service)
 }
 
-func authHandler(dao usersrv.Dao) server.Handler {
-	service := authsrv.NewService(dao)
+func authHandler(dao usersrv.Dao, notifier event.Notifier) server.Handler {
+	service := authsrv.NewService(dao, notifier)
 	return auth.NewHandler(service)
 }
 
