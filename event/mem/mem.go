@@ -33,3 +33,7 @@ func (m *Mem) AddListener(topic string, l event.Listener) error {
 
 	return nil
 }
+
+func (m *Mem) AddListenerPattern(topicPattern string, n event.Listener) error {
+	return m.AddListener(topicPattern, n)
+}

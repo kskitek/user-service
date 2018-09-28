@@ -2,13 +2,15 @@ package auth
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/user"
 )
 
-func NewService(dao user.Dao) Service {
+func NewService(dao user.Dao, notifier event.Notifier) Service {
 	return &service{
 		authenticator: NewAuthenticator(),
 		userDao:       dao,
+		notifier:      notifier,
 	}
 }
 

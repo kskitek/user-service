@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,7 +23,7 @@ type Route struct {
 }
 
 func (s *server) Handler() http.Handler {
-	return s.router
+	return nethttp.Middleware(opentracing.GlobalTracer(), s.router)
 }
 
 func (s *server) AddRoutes(routes []*Route) {

@@ -33,7 +33,7 @@ func (a *handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if decodeErr != nil {
 		err = &server.ApiError{Message: decodeErr.Error(), StatusCode: http.StatusUnprocessableEntity}
 	} else {
-		token, err = a.s.Login(u.Name, u.Password)
+		token, err = a.s.Login(r.Context(), u.Name, u.Password)
 	}
 
 	if err != nil {

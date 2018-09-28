@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"time"
+
 	"github.com/go-redis/redis"
 	"github.com/kskitek/user-service/event"
 	"github.com/sirupsen/logrus"
@@ -27,6 +29,10 @@ type redisNotifier struct {
 }
 
 func (r *redisNotifier) Notify(topic string, n event.Notification) error {
+	var timeZero time.Time
+	if n.When == timeZero {
+		n.When = time.Now().UTC()
+	}
 	cmd := r.client.Publish(topic, n)
 	logrus.WithField("notification", n).Debug("Notify")
 	return cmd.Err()
@@ -34,12 +40,16 @@ func (r *redisNotifier) Notify(topic string, n event.Notification) error {
 
 func (r *redisNotifier) AddListener(topic string, n event.Listener) error {
 	pubSub := r.client.Subscribe(topic)
-	_, err := pubSub.Receive()
-	if err != nil {
-		return err
-	}
 	c := pubSub.Channel()
 	go channelListener(c, n, topic)
+
+	return nil
+}
+
+func (r *redisNotifier) AddListenerPattern(topicPattern string, n event.Listener) error {
+	pubSub := r.client.PSubscribe(topicPattern)
+	c := pubSub.Channel()
+	go channelListener(c, n, topicPattern)
 
 	return nil
 }

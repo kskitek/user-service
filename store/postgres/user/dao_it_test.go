@@ -3,6 +3,7 @@
 package user
 
 import (
+	"context"
 	"strconv"
 	"testing"
 	"time"
@@ -40,7 +41,7 @@ func Test_AddAndGet_ReturnsTheUser(t *testing.T) {
 	assert.Nil(t, err)
 	newId, _ := strconv.ParseInt(newUser.Id, 10, 64)
 
-	userByName, err := out.GetById(newId)
+	userByName, err := out.GetById(context.TODO(), newId)
 	assert.Nil(t, err)
 
 	assert.Equal(t, newUser, userByName)
@@ -84,7 +85,7 @@ func Test_AfterDelete_CannotGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, userExists)
 
-	userById, err := out.GetById(newId)
+	userById, err := out.GetById(context.TODO(), newId)
 	assert.Nil(t, err)
 	assert.Nil(t, userById)
 

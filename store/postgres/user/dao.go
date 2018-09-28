@@ -1,12 +1,14 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/kskitek/user-service/tracing"
 	"github.com/kskitek/user-service/user"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -34,18 +36,20 @@ type pgDao struct {
 	db *sql.DB
 }
 
-func (d *pgDao) GetById(id int64) (*user.User, error) {
-	return d.getUser(fmt.Sprintf(getByPattern, "id"), id)
+func (d *pgDao) GetById(ctx context.Context, id int64) (*user.User, error) {
+	return d.getUser(ctx, fmt.Sprintf(getByPattern, "id"), id)
 }
 
 func (d *pgDao) GetByName(name string) (*user.User, error) {
-	return d.getUser(fmt.Sprintf(getByPattern, "name"), name)
+	return d.getUser(context.Background(), fmt.Sprintf(getByPattern, "name"), name)
 }
 
-func (d *pgDao) getUser(query string, params ...interface{}) (*user.User, error) {
+func (d *pgDao) getUser(ctx context.Context, query string, params ...interface{}) (*user.User, error) {
+	defer tracing.SetUpTrace(ctx, "postgres")()
 	u := &user.User{}
-	err := d.db.QueryRow(query, params...).
-		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.RegistrationDate)
+	pwd := ""
+	err := d.db.QueryRowContext(ctx, query, params...).
+		Scan(&u.Id, &u.Name, &u.Email, &pwd, &u.RegistrationDate)
 	u.RegistrationDate = u.RegistrationDate.In(time.UTC)
 
 	switch err {
@@ -59,7 +63,12 @@ func (d *pgDao) getUser(query string, params ...interface{}) (*user.User, error)
 }
 
 func (d *pgDao) MatchPassword(userName string, password string) (bool, error) {
-	u, err := d.getUser("SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, password)
+	pwd, err := hashPassword(password)
+	if err != nil {
+		logrus.WithError(err).Error("unable to hash password")
+		return false, err
+	}
+	u, err := d.getUser(context.Background(), "SELECT "+allUserFields+" FROM users WHERE name = $1 AND password = $2", userName, pwd)
 	return u != nil, err
 }
 

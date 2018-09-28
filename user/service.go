@@ -1,12 +1,14 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/kskitek/user-service/event"
 	"github.com/kskitek/user-service/server"
+	"github.com/kskitek/user-service/tracing"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,9 +25,9 @@ type User struct {
 }
 
 type Service interface {
-	Get(int64) (*User, *server.ApiError)
-	Add(*User) (*User, *server.ApiError)
-	Delete(int64) *server.ApiError
+	Get(context.Context, int64) (*User, *server.ApiError)
+	Add(context.Context, *User) (*User, *server.ApiError)
+	Delete(context.Context, int64) *server.ApiError
 }
 
 func NewService(dao Dao, notifier event.Notifier) Service {
@@ -40,11 +42,11 @@ type crud struct {
 	notifier event.Notifier
 }
 
-func (uc *crud) Get(id int64) (*User, *server.ApiError) {
+func (uc *crud) Get(ctx context.Context, id int64) (*User, *server.ApiError) {
 	if id <= 0 {
 		return nil, &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
 	}
-	user, err := uc.dao.GetById(id)
+	user, err := uc.dao.GetById(ctx, id)
 	if err != nil {
 		return nil, &server.ApiError{Message: "Cannot read user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
@@ -56,51 +58,86 @@ func (uc *crud) Get(id int64) (*User, *server.ApiError) {
 	return user, nil
 }
 
-func (uc *crud) Add(user *User) (*User, *server.ApiError) {
+func (uc *crud) Add(ctx context.Context, user *User) (*User, *server.ApiError) {
 	if user == nil {
 		return nil, &server.ApiError{Message: "User details required", StatusCode: http.StatusUnprocessableEntity}
 	}
-	exists, err := uc.dao.Exists(user)
+	err := uc.checkIfExists(ctx, user)
 	if err != nil {
-		return nil, &server.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
-	}
-	if exists {
-		return nil, &server.ApiError{Message: "User already exists.", StatusCode: http.StatusConflict}
+		return nil, err
 	}
 
 	apiErr := validateAddUserPayload(user)
 	if apiErr != nil {
 		return nil, apiErr
 	}
+
+	tags := tracing.Tags{"op": "add"}
+	newUser, err := uc.add(ctx, user, tags)
+	if err != nil {
+		return nil, err
+	}
+
+	newUser.Password = ""
+	n := event.Notification{CorrelationId: tracing.ContextToString(ctx), Payload: newUser, Event: "add"}
+	uc.notify(ctx, CrudBaseTopic+".add", n, tags)
+	return newUser, nil
+}
+
+func (uc *crud) Delete(ctx context.Context, id int64) *server.ApiError {
+	if id == 0 {
+		return &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
+	}
+	tags := tracing.Tags{"op": "delete"}
+	err := uc.delete(ctx, id, tags)
+	if err != nil {
+		return err
+	}
+	n := event.Notification{CorrelationId: tracing.ContextToString(ctx), Payload: id, Event: "delete"}
+	uc.notify(ctx, CrudBaseTopic+".delete", n, tags)
+
+	return nil
+}
+
+func (uc *crud) checkIfExists(ctx context.Context, user *User) *server.ApiError {
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tracing.Tags{"op": "exists"})()
+	exists, err := uc.dao.Exists(user)
+	if err != nil {
+		return &server.ApiError{Message: "Cannot save user: " + err.Error(), StatusCode: http.StatusInternalServerError}
+	}
+	if exists {
+		return &server.ApiError{Message: "User already exists.", StatusCode: http.StatusConflict}
+	}
+	return nil
+}
+
+func (uc *crud) add(ctx context.Context, user *User, tags tracing.Tags) (*User, *server.ApiError) {
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tags)()
 	newUser, err := uc.dao.Add(user)
 	if err != nil {
 		fmt.Println(err)
 		return nil, &server.ApiError{Message: "Cannot add user", StatusCode: http.StatusUnprocessableEntity}
 	}
-
-	newUser.Password = ""
-	n := event.Notification{Payload: newUser}
-	err = uc.notifier.Notify(CrudBaseTopic+".add", n)
-	if err != nil {
-		logrus.WithError(err).WithField("notification", n).Error("error when notifying about new user")
-	}
 	return newUser, nil
 }
 
-func (uc *crud) Delete(id int64) *server.ApiError {
-	if id == 0 {
-		return &server.ApiError{Message: "Id required", StatusCode: http.StatusBadRequest}
+func (uc *crud) notify(ctx context.Context, topic string, n event.Notification, tags tracing.Tags) {
+	tags["notification"] = n.String()
+	defer tracing.SetUpTraceWithTags(ctx, "notification", tags)()
+	err := uc.notifier.Notify(topic, n)
+	if err != nil {
+		logrus.WithError(err).
+			WithFields(logrus.Fields{"notification": n, "topic": topic}).
+			Error("error when notifying")
 	}
+}
+
+func (uc *crud) delete(ctx context.Context, id int64, tags tracing.Tags) *server.ApiError {
+	defer tracing.SetUpTraceWithTags(ctx, "dao", tags)()
 	err := uc.dao.Delete(id)
 	if err != nil {
 		return &server.ApiError{Message: "Cannot delete user: " + err.Error(), StatusCode: http.StatusInternalServerError}
 	}
-	n := event.Notification{Payload: id}
-	err = uc.notifier.Notify(CrudBaseTopic+".delete", n)
-	if err != nil {
-		logrus.WithError(err).WithField("notification", n).Error("error when notifying about deleted user")
-	}
-
 	return nil
 }
 

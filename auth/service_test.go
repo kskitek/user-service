@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -16,26 +17,26 @@ var out = &service{
 }
 
 func Test_Login_DaoError_Error(t *testing.T) {
-	_, apiError := out.Login(UserErrorName, "")
+	_, apiError := out.Login(context.TODO(), UserErrorName, "")
 
 	assert.NotNil(t, apiError)
 }
 
 func Test_Login_PasswordMatchesInDao_ReturnToken(t *testing.T) {
-	token, apiError := out.Login(UserOkName, UserOkPassword)
+	token, apiError := out.Login(context.TODO(), UserOkName, UserOkPassword)
 
 	assert.Nil(t, apiError)
 	assert.Equal(t, UserOkToken, token)
 }
 
 func Test_Login_PasswordNotMatchesInDao_Error(t *testing.T) {
-	_, apiError := out.Login(UserOkName, "WrongPassword")
+	_, apiError := out.Login(context.TODO(), UserOkName, "WrongPassword")
 
 	assert.NotNil(t, apiError)
 }
 
 func Test_Login_ErrorInAuthenticator_Error(t *testing.T) {
-	_, apiError := out.Login(UserErrorAuthName, UserOkPassword)
+	_, apiError := out.Login(context.TODO(), UserErrorAuthName, UserOkPassword)
 
 	assert.NotNil(t, apiError)
 }
@@ -43,7 +44,7 @@ func Test_Login_ErrorInAuthenticator_Error(t *testing.T) {
 func Test_Login_LoggsIn_Notifies(t *testing.T) {
 	c := prepareNotificationTest(t, AuthTopic+".login")
 
-	token, _ := out.Login(UserOkName, UserOkPassword)
+	token, _ := out.Login(context.TODO(), UserOkName, UserOkPassword)
 	n := waitForNotification(t, c)
 
 	assert.Equal(t, token, n.Token)

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func Test_GetUser_EmptyId_Error(t *testing.T) {
 	out := newOut()
 	var id int64
 
-	_, apiError := out.Get(id)
+	_, apiError := out.Get(context.TODO(), id)
 
 	assert.NotNil(t, apiError)
 }
@@ -29,7 +30,7 @@ func Test_GetUser_EmptyId_Error(t *testing.T) {
 func Test_GetUser_ErrorInDao_Error(t *testing.T) {
 	out := newOut()
 
-	_, apiError := out.Get(UserErrorId)
+	_, apiError := out.Get(context.TODO(), UserErrorId)
 
 	assert.NotNil(t, apiError)
 }
@@ -38,7 +39,7 @@ func Test_GetUser_NoUserForId_Error(t *testing.T) {
 	out := newOut()
 	notExistingId := int64(100100)
 
-	_, apiError := out.Get(notExistingId)
+	_, apiError := out.Get(context.TODO(), notExistingId)
 
 	assert.NotNil(t, apiError)
 }
@@ -47,7 +48,7 @@ func Test_Add_NilUser_Error(t *testing.T) {
 	out := newOut()
 	var user *User
 
-	_, apiError := out.Add(user)
+	_, apiError := out.Add(context.TODO(), user)
 
 	assert.NotNil(t, apiError)
 }
@@ -57,7 +58,7 @@ func Test_Add_ErrorInDao_Error(t *testing.T) {
 	for _, user := range users {
 		out := newOut()
 
-		_, apiError := out.Add(user)
+		_, apiError := out.Add(context.TODO(), user)
 
 		assert.NotNil(t, apiError)
 	}
@@ -66,7 +67,7 @@ func Test_Add_ErrorInDao_Error(t *testing.T) {
 func Test_Add_UserExists_Error(t *testing.T) {
 	out := newOut()
 
-	_, apiError := out.Add(UserExists())
+	_, apiError := out.Add(context.TODO(), UserExists())
 
 	assert.Error(t, apiError)
 }
@@ -74,7 +75,7 @@ func Test_Add_UserExists_Error(t *testing.T) {
 func Test_Add_Ok_ReturnedPasswordIsEmpty(t *testing.T) {
 	out := newOut()
 
-	user, apiError := out.Add(UserOk())
+	user, apiError := out.Add(context.TODO(), UserOk())
 
 	assert.Nil(t, apiError)
 
@@ -86,7 +87,7 @@ func Test_Add_NoName_Error(t *testing.T) {
 
 	user := UserOk()
 	user.Name = ""
-	_, apiError := out.Add(user)
+	_, apiError := out.Add(context.TODO(), user)
 
 	assert.NotNil(t, apiError)
 }
@@ -96,7 +97,7 @@ func Test_Add_NoPassword_Error(t *testing.T) {
 
 	user := UserOk()
 	user.Password = ""
-	_, apiError := out.Add(user)
+	_, apiError := out.Add(context.TODO(), user)
 
 	assert.NotNil(t, apiError)
 }
@@ -106,7 +107,7 @@ func Test_Add_NoEmail_Error(t *testing.T) {
 
 	user := UserOk()
 	user.Email = ""
-	_, apiError := out.Add(user)
+	_, apiError := out.Add(context.TODO(), user)
 
 	assert.NotNil(t, apiError)
 }
@@ -115,7 +116,7 @@ func Test_Delete_EmptyId_Error(t *testing.T) {
 	out := newOut()
 	var id int64
 
-	apiError := out.Delete(id)
+	apiError := out.Delete(context.TODO(), id)
 
 	assert.NotNil(t, apiError)
 }
@@ -123,7 +124,7 @@ func Test_Delete_EmptyId_Error(t *testing.T) {
 func Test_Delete_ErrorInDao_Error(t *testing.T) {
 	out := newOut()
 
-	apiError := out.Delete(UserErrorId)
+	apiError := out.Delete(context.TODO(), UserErrorId)
 
 	assert.NotNil(t, apiError)
 }
@@ -133,7 +134,7 @@ func Test_Delete_UserExistsOrNot_NoError(t *testing.T) {
 	for _, userId := range users {
 		out := newOut()
 
-		apiError := out.Delete(userId)
+		apiError := out.Delete(context.TODO(), userId)
 
 		assert.Nil(t, apiError)
 	}
@@ -142,7 +143,7 @@ func Test_Delete_UserExistsOrNot_NoError(t *testing.T) {
 func Test_Get_UserHasPassword_ReturnedPasswordIsEmpty(t *testing.T) {
 	out := newOut()
 
-	user, apiError := out.Get(UserExistsId)
+	user, apiError := out.Get(context.TODO(), UserExistsId)
 
 	assert.Nil(t, apiError)
 
@@ -166,10 +167,10 @@ func prepareNotificationTest(t *testing.T, topic string) (Service, chan event.No
 }
 
 func Test_Add_OkUser_Notifies(t *testing.T) {
-	out, c := prepareNotificationTest(t, CrudBaseTopic + ".add")
+	out, c := prepareNotificationTest(t, CrudBaseTopic+".add")
 	user := UserOk()
 
-	userAdded, err := out.Add(user)
+	userAdded, err := out.Add(context.TODO(), user)
 	notification := waitForNotification(c)
 
 	assert.Nil(t, err)
@@ -204,14 +205,14 @@ func Test_Add_NotifierFails_ErrorIsLogged(t *testing.T) {
 }
 
 func Test_Delete_OkUser_Notifies(t *testing.T) {
-	out, c := prepareNotificationTest(t, CrudBaseTopic + ".delete")
+	out, c := prepareNotificationTest(t, CrudBaseTopic+".delete")
 	user := UserOk()
 
-	_, err := out.Add(user)
+	_, err := out.Add(context.TODO(), user)
 	assert.Nil(t, err)
 
 	waitForNotification(c)
-	err = out.Delete(UserOkId)
+	err = out.Delete(context.TODO(), UserOkId)
 	deleteNotification := waitForNotification(c)
 
 	assert.Nil(t, err)

@@ -1,7 +1,9 @@
 package user
 
+import "context"
+
 type Dao interface {
-	GetById(int64) (*User, error)
+	GetById(context.Context, int64) (*User, error)
 	GetByName(string) (*User, error)
 	MatchPassword(userName string, password string) (bool, error)
 	Exists(*User) (bool, error)
