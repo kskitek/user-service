@@ -11,6 +11,10 @@ import (
 )
 
 var Server = &server{router: mux.NewRouter()}
+var serverHandlers = []func(h http.Handler) http.HandlerFunc{
+	logAround,
+	handleCors,
+}
 
 type server struct {
 	router *mux.Router
@@ -28,11 +32,16 @@ func (s *server) Handler() http.Handler {
 
 func (s *server) AddRoutes(routes []*Route) {
 	for _, r := range routes {
-		s.router.HandleFunc(r.Path, handleAround(r.Handler)).Methods(r.Methods...)
+		handler := r.Handler
+		for _, h := range serverHandlers {
+			handler = h(handler)
+		}
+		methods := append(r.Methods, "OPTIONS")
+		s.router.HandleFunc(r.Path, handler).Methods(methods...)
 	}
 }
 
-func handleAround(h http.Handler) http.HandlerFunc {
+func logAround(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		begin := time.Now()
 		defer func() {
