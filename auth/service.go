@@ -35,7 +35,7 @@ func (a *service) Login(ctx context.Context, name string, password string) (stri
 	}
 	if !matching {
 		spanFinish()
-		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
+		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusForbidden}
 	}
 	spanFinish()
 
