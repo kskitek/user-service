@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/kskitek/user-service/event"
@@ -27,7 +28,12 @@ type service struct {
 }
 
 func (a *service) Login(ctx context.Context, name string, password string) (string, *server.ApiError) {
-	spanFinish := tracing.SetUpTraceWithTags(ctx, "dao", tracing.Tags{"username": name, "op":"matchPassword"})
+	spanFinish := tracing.SetUpTraceWithTags(ctx, "dao", tracing.Tags{"username": name, "op": "matchPassword"})
+	if !validateName(name) {
+		msg := "invalid username"
+		logrus.WithField("username", name).Error(msg)
+		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotAcceptable}
+	}
 	matching, err := a.userDao.MatchPassword(name, password)
 	if err != nil {
 		spanFinish()
@@ -35,7 +41,7 @@ func (a *service) Login(ctx context.Context, name string, password string) (stri
 	}
 	if !matching {
 		spanFinish()
-		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusForbidden}
+		return "", &server.ApiError{Message: "Invalid username or password", StatusCode: http.StatusNotFound}
 	}
 	spanFinish()
 
@@ -53,4 +59,17 @@ func (a *service) Login(ctx context.Context, name string, password string) (stri
 		logrus.WithError(err).Error("unable to notify about login")
 	}
 	return token, nil
+}
+
+const (
+	namePattern     = "[a-zA-Z0-9\\-\\_\\.\\+]{5,20}"
+	userNamePattern = "^" + namePattern + "$"
+)
+
+var (
+	userNameRegexp = regexp.MustCompile(userNamePattern)
+)
+
+func validateName(name string) bool {
+	return userNameRegexp.MatchString(name)
 }

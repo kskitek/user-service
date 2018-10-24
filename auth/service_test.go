@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -41,7 +42,7 @@ func Test_Login_ErrorInAuthenticator_Error(t *testing.T) {
 	assert.NotNil(t, apiError)
 }
 
-func Test_Login_LoggsIn_Notifies(t *testing.T) {
+func Test_Login_LogsIn_Notifies(t *testing.T) {
 	c := prepareNotificationTest(t, AuthTopic+".login")
 
 	token, _ := out.Login(context.TODO(), UserOkName, UserOkPassword)
@@ -70,5 +71,33 @@ func waitForNotification(t *testing.T, c chan event.Notification) (notification 
 	case <-time.NewTimer(time.Second).C:
 		t.Fatal("Notification timeout")
 		return
+	}
+}
+
+var validationCases = []struct {
+	name           string
+	expectedResult bool
+}{
+	{"Name1", true},
+	{"", false},
+	{"Name1\"", false},
+	{"Name1'", false},
+	{"Name1;", false},
+	{"Name1#", false},
+	{"11111111102222222220", true},
+	{"111", false},
+	{"111111111022222222203", false},
+}
+
+func Test_ValidateUserPayload_(t *testing.T) {
+	for i, c := range validationCases {
+		tf := func(t *testing.T) {
+			result := validateName(c.name)
+
+			t.Log("Payload:", c.name)
+			assert.Equal(t, c.expectedResult, result)
+		}
+
+		t.Run(t.Name()+strconv.Itoa(i), tf)
 	}
 }
