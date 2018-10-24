@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -187,23 +188,6 @@ func waitForNotification(c chan event.Notification) (notification event.Notifica
 	}
 }
 
-func Test_Add_NotifierFails_ErrorIsLogged(t *testing.T) {
-	//notif := &mockNotifier{}
-	//out := newOut().(*crud)
-	//out.notifier = notif
-	//hook := &testHook{}
-	//logrus.AddHook(hook)
-	//user := UserOk()
-	//
-	//newUser, err := out.Add(user)
-	//n := &event.Notification{Payload: newUser, Event: "create"}
-	//
-	//assert.Nil(t, err)
-	//
-	//assert.Equal(t, notifierMockError, hook.lastError)
-	//assert.Equal(t, n, hook.lastNotification)
-}
-
 func Test_Delete_OkUser_Notifies(t *testing.T) {
 	out, c := prepareNotificationTest(t, CrudBaseTopic+".delete")
 	user := UserOk()
@@ -220,20 +204,38 @@ func Test_Delete_OkUser_Notifies(t *testing.T) {
 	assert.Equal(t, UserOkId, deleteNotification.Payload)
 }
 
-func Test_Delete_NotifierFails_ErrorIsLogger(t *testing.T) {
-	//notif := &mockNotifier{}
-	//out := newOut().(*crud)
-	//out.notifier = notif
-	//hook := &testHook{}
-	//logrus.AddHook(hook)
-	//user := UserOk()
-	//
-	//_, err := out.Add(user)
-	//err = out.Delete(UserOkId)
-	//n := &event.Notification{Payload: UserOkId, Event: "delete"}
-	//
-	//assert.Nil(t, err)
-	//
-	//assert.Equal(t, notifierMockError, hook.lastError)
-	//assert.Equal(t, n, hook.lastNotification)
+var validationCases = []struct {
+	in             User
+	expectedResult bool
+}{
+	{User{Name: "Name1", Password: "Pwd", Email: "name1@email.com"}, true},
+	{User{Name: "", Password: "Pwd", Email: "name1@email.com"}, false},
+	{User{Name: "Name1", Password: "", Email: "name1@email.com"}, false},
+	{User{Name: "Name1", Password: "Pwd", Email: ""}, false},
+	{User{Name: "Name1\"", Password: "Pwd", Email: "name1@email.com"}, false},
+	{User{Name: "Name1'", Password: "Pwd", Email: "name1@email.com"}, false},
+	{User{Name: "Name1;", Password: "Pwd", Email: "name1@email.com"}, false},
+	{User{Name: "Name1#", Password: "Pwd", Email: "name1@email.com"}, false},
+	{User{Name: "Name1", Password: "Pwd", Email: "name1@email.com\""}, false},
+	{User{Name: "Name1", Password: "Pwd", Email: "name1@email.com'"}, false},
+	{User{Name: "Name1", Password: "Pwd", Email: "name1@email.com;"}, false},
+	{User{Name: "Name1", Password: "Pwd", Email: "name1@email.com#"}, false},
+	{User{Name: "11111111102222222220", Password: "Pwd", Email: "11111111102222222220@1111111110222222.com"}, true},
+	{User{Name: "111", Password: "Pwd", Email: "11111111102222222220@11111111102222222220.com"}, false},
+	{User{Name: "111111111022222222203", Password: "Pwd", Email: "11111111102222222220@1111111110222222.com"}, false},
+	{User{Name: "11111111102222222222", Password: "Pwd", Email: "11111111102222222220@1111111110222222.com3"}, false},
+}
+
+func Test_ValidateUserPayload_(t *testing.T) {
+	for i, c := range validationCases {
+		tf := func(t *testing.T) {
+			result := validateAddUserPayload(&c.in)
+
+			t.Log("Payload:", c.in)
+			t.Log("Error:", result)
+			assert.Equal(t, c.expectedResult, result == nil)
+		}
+
+		t.Run(t.Name()+strconv.Itoa(i), tf)
+	}
 }

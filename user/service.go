@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/kskitek/user-service/event"
@@ -145,8 +146,8 @@ func validateAddUserPayload(user *User) *server.ApiError {
 	if !validateEmail(user.Email) {
 		return &server.ApiError{Message: "Invalid email address", StatusCode: http.StatusUnprocessableEntity}
 	}
-	if user.Name == "" {
-		return &server.ApiError{Message: "Name cannot be empty", StatusCode: http.StatusUnprocessableEntity}
+	if !validateName(user.Name) {
+		return &server.ApiError{Message: "Invalid name. Required 5-20 letters and numbers.", StatusCode: http.StatusUnprocessableEntity}
 	}
 	if user.Password == "" {
 		return &server.ApiError{Message: "Password cannot be empty", StatusCode: http.StatusUnprocessableEntity}
@@ -155,11 +156,25 @@ func validateAddUserPayload(user *User) *server.ApiError {
 	return nil
 }
 
+const (
+	namePattern     = "[a-zA-Z0-9\\-\\_\\.\\+]{5,20}"
+	userNamePattern = "^" + namePattern + "$"
+	emailPattern    = "^" + namePattern + "@" + namePattern + "$"
+)
+
+var (
+	userNameRegexp = regexp.MustCompile(userNamePattern)
+	emailRegexp    = regexp.MustCompile(emailPattern)
+)
+
+func validateName(name string) bool {
+	return userNameRegexp.MatchString(name)
+}
+
 func validateEmail(email string) bool {
-	// TODO email pattern
-	if email == "" {
-		return false
-	} else {
-		return true
-	}
+	return emailRegexp.MatchString(email)
+}
+
+func (u *User) String() string {
+	return fmt.Sprintf("{id: %s; name: %s; email: %s}", u.Id, u.Name, u.Email)
 }
